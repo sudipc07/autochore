@@ -1,11 +1,11 @@
 import Foundation
 
 enum CharacterNames {
-    // Original funny names — no trademarked characters.
+    // Phineas and Ferb characters (internal use).
     static let pool = [
-        "Goober", "Bonkers", "Ziggy", "Waffles", "Pickles", "Noodle",
-        "Gizmo", "Tater", "Biscuit", "Doofus", "Wiggles", "Snorkel",
-        "Bingo", "Mojo", "Pixel", "Turbo"
+        "Phineas", "Ferb", "Candace", "Perry", "Doofenshmirtz", "Isabella",
+        "Baljeet", "Buford", "Jeremy", "Vanessa", "Stacy", "Carl",
+        "Norm", "Monogram", "Pinky", "Lawrence"
     ]
     static func randomFour() -> [String] {
         Array(pool.shuffled().prefix(4))
