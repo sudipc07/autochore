@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 
 /// The full record flow for one chore: countdown → recording → upload.
 /// Presented as a cover; calls `onDone` to dismiss back to Home.
