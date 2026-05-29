@@ -10,5 +10,9 @@ xcuserdata/
 *.xccheckout
 .swiftpm/
 
+# Node
+node_modules/
+.env
+
 # Misc
 *.log
