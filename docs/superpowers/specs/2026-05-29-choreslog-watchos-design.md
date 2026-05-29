@@ -33,6 +33,19 @@ Standalone **watchOS app** (no iPhone companion). SwiftUI + `CoreMotion`. On sto
 - **Auth headers on POST:** `apikey: <publishable key>` and `Authorization: Bearer <publishable key>`
 - **Note:** Do not commit the key to a public repo. Turn on RLS + Supabase Auth when this graduates to the real product (v2).
 
+### `chores` table (shared chore list, created via Supabase SQL Editor)
+
+| Column     | Type        | Notes |
+|------------|-------------|-------|
+| id         | uuid (pk)   | default gen_random_uuid() |
+| label      | text unique | chore name (e.g. "Mop") |
+| sort_order | integer     | display order, presets first |
+| created_at | timestamptz | default now() |
+
+Seeded presets: Mop, Vacuum, Sweep, Dust, Clean Toilets, Wipe Windows, Wipe Surfaces, Empty Trash, Mop Stairs, Cook.
+
+The Watch fetches this list on launch (`GET /rest/v1/chores?order=sort_order`) and caches it locally for offline use. Adding a custom chore POSTs a new row; it then appears on all Watches on their next fetch.
+
 ### `sessions` table (created via Supabase SQL Editor)
 
 | Column           | Type        | Notes |
@@ -57,7 +70,7 @@ Indexes on `chore_label`, `user_id`, `start_time`.
 ## Screens / Flow
 
 1. **Name picker** (first launch only) — "Who are you?" with 4 random character names as large tappable buttons + a shuffle option. Selection saved to `UserDefaults` and **locked** for the life of the install (one Watch = one identity). Funny/original character names (avoid trademarked Disney names if anything is ever shared publicly).
-2. **Home** — 3 large chore tiles: **Mop / Vacuum / Cook**. Character name shown small at top.
+2. **Home** — scrollable grid of chore tiles loaded from the shared `chores` list (cached locally), plus an **"+ Add"** tile. Character name shown small at top. "+ Add" → dictation/scribble entry → saved to Supabase `chores` table → appears on all Watches.
 3. **Countdown** — full-screen 3-2-1.
 4. **Recording** — chore name at top, elapsed timer in middle, **tap-and-hold-to-stop** control at bottom (hold avoids accidental taps; easier than slide on a tiny screen).
 5. **Stop** → optional one-line notes (dictation/scribble, skippable) → spinner → POST → success/failure feedback → back to Home.
@@ -69,10 +82,12 @@ Indexes on `chore_label`, `user_id`, `start_time`.
 - `ChoresLogApp.swift` — entry point; routes to NamePicker (if no saved name) or Home.
 - `Models/Session.swift` — `Codable` session + sample structs (the JSON payload).
 - `Sensors/SensorRecorder.swift` — `CoreMotion` wrapper. Starts/stops accel+gyro+mag at 50 Hz via `CMMotionManager`, relative altitude via `CMAltimeter`, floor count via `CMPedometer`. Buffers samples in memory.
-- `Network/SupabaseClient.swift` — POSTs session JSON; holds URL + publishable key + headers.
+- `Network/SupabaseClient.swift` — POSTs session JSON; GETs/POSTs chores; holds URL + publishable key + headers.
 - `Storage/SessionStore.swift` — saves failed sessions to disk; reloads + retries pending on launch.
+- `Storage/ChoreStore.swift` — fetches shared chore list, caches locally for offline use, posts new custom chores.
 - `Views/NamePickerView.swift`
-- `Views/HomeView.swift`
+- `Views/HomeView.swift` — chore tile grid + "+ Add" tile.
+- `Views/AddChoreView.swift` — dictation/scribble entry for a new chore.
 - `Views/CountdownView.swift`
 - `Views/RecordingView.swift`
 
@@ -102,7 +117,7 @@ Indexes on `chore_label`, `user_id`, `start_time`.
 - Background recording
 - On-device analysis or classification
 - iPhone companion app
-- Editable chore list / custom labels
+- Deleting or renaming chores (add-only for v1)
 - Changeable character name after first pick
 
 ---
