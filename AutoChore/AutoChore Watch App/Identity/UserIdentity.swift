@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 
 final class UserIdentity: ObservableObject {
     private let key = "character_name"
