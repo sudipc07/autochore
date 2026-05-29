@@ -18,9 +18,15 @@ try {
   /* ignore */
 }
 
-const { listSessions, getSession, listFacets } = require('./supabase');
+const {
+  listSessions,
+  getSession,
+  listFacets,
+  listDevices,
+  sessionCountsByUser,
+} = require('./supabase');
 const { motionSamplesToCSV } = require('./csv');
-const { loginPage, listPage, detailPage } = require('./views');
+const { loginPage, listPage, detailPage, devicesPage } = require('./views');
 
 const PORT = process.env.PORT || 3003;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'change-me';
@@ -71,6 +77,15 @@ app.get('/', requireAuth, async (req, res, next) => {
     const selected = { chore: req.query.chore || '', user: req.query.user || '' };
     const [sessions, facets] = await Promise.all([listSessions(selected), listFacets()]);
     res.send(listPage(sessions, facets, selected));
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.get('/devices', requireAuth, async (req, res, next) => {
+  try {
+    const [devices, counts] = await Promise.all([listDevices(), sessionCountsByUser()]);
+    res.send(devicesPage(devices, counts));
   } catch (err) {
     next(err);
   }

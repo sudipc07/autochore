@@ -53,4 +53,16 @@ async function listFacets() {
   return { chores, users };
 }
 
-module.exports = { listSessions, getSession, listFacets };
+async function listDevices() {
+  return restGet('devices', { select: '*', order: 'created_at.asc' });
+}
+
+// Count sessions per user_id so the Devices view can show activity.
+async function sessionCountsByUser() {
+  const rows = await restGet('sessions', { select: 'user_id' });
+  const counts = {};
+  for (const r of rows) counts[r.user_id] = (counts[r.user_id] || 0) + 1;
+  return counts;
+}
+
+module.exports = { listSessions, getSession, listFacets, listDevices, sessionCountsByUser };

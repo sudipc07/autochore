@@ -22,6 +22,10 @@ function layout(title, body) {
 <body>
   <header class="topbar">
     <a class="brand" href="/">AutoChore</a>
+    <nav class="nav">
+      <a href="/">Sessions</a>
+      <a href="/devices">Devices</a>
+    </nav>
     <form method="post" action="/logout" class="logout"><button type="submit">Log out</button></form>
   </header>
   <main>${body}</main>
@@ -150,4 +154,29 @@ function detailPage(session) {
   return layout(`${session.chore_label} session`, body);
 }
 
-module.exports = { esc, layout, loginPage, listPage, detailPage };
+function devicesPage(devices, counts) {
+  const rows = devices
+    .map(
+      (d) => `<tr>
+        <td>${esc(d.name)}</td>
+        <td>${counts[d.name] || 0}</td>
+        <td class="mono">${esc(d.device_id)}</td>
+        <td>${fmtDate(d.created_at)}</td>
+      </tr>`
+    )
+    .join('');
+
+  const body = `
+  <h1>Devices <span class="count">${devices.length}</span></h1>
+  ${
+    devices.length === 0
+      ? '<p class="empty">No devices registered yet.</p>'
+      : `<table class="sessions">
+    <thead><tr><th>Name</th><th>Sessions</th><th>Device ID</th><th>Registered</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`
+  }`;
+  return layout('Devices', body);
+}
+
+module.exports = { esc, layout, loginPage, listPage, detailPage, devicesPage };

@@ -37,6 +37,23 @@ struct SupabaseClient {
         try check(resp)
     }
 
+    func fetchTakenNames() async throws -> [String] {
+        let req = request("devices", query: "select=name", method: "GET")
+        let (data, resp) = try await URLSession.shared.data(for: req)
+        try check(resp)
+        struct Row: Decodable { let name: String }
+        return try JSONDecoder().decode([Row].self, from: data).map(\.name)
+    }
+
+    func registerDevice(deviceId: String, name: String) async throws {
+        var req = request("devices", query: "on_conflict=device_id", method: "POST")
+        req.setValue("resolution=merge-duplicates,return=minimal", forHTTPHeaderField: "Prefer")
+        struct Body: Encodable { let device_id: String; let name: String }
+        req.httpBody = try JSONEncoder().encode(Body(device_id: deviceId, name: name))
+        let (_, resp) = try await URLSession.shared.data(for: req)
+        try check(resp)
+    }
+
     func postSession(_ session: Session) async throws {
         var req = request("sessions", method: "POST")
         req.setValue("return=minimal", forHTTPHeaderField: "Prefer")
