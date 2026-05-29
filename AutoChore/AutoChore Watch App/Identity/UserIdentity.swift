@@ -15,4 +15,10 @@ final class UserIdentity: ObservableObject {
         defaults.set(value, forKey: key)
         name = value
     }
+
+    /// Clears the locked name (testing convenience — returns to the picker).
+    func reset() {
+        defaults.removeObject(forKey: key)
+        name = nil
+    }
 }
