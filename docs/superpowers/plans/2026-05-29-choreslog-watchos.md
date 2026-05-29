@@ -1,4 +1,4 @@
-# ChoresLog watchOS App Implementation Plan
+# AutoChore watchOS App Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -14,15 +14,15 @@
 
 1. **Create the Supabase tables** — run the SQL in Task 1 in the Supabase SQL Editor.
 2. **Create the empty Xcode project** — Xcode → File → New → Project → watchOS → App:
-   - Product Name: `ChoresLog`
+   - Product Name: `AutoChore`
    - Interface: SwiftUI, Language: Swift
    - Watch-only (standalone), no Notification scene
    - Saved inside `/Users/sudiptohome/Store/autochore/`
-   - Set **Team** to the paid developer team and a bundle id like `com.rode.ChoresLog`.
+   - Set **Team** to the paid developer team; bundle id `com.mobile80.AutoChore`.
 3. In the watch app target's **Info** tab, add key **`NSMotionUsageDescription`** with value:
-   `ChoresLog records motion to log how chores are performed.`
+   `AutoChore records motion to log how chores are performed.`
 
-All source-file paths below are relative to the Watch App source folder created by Xcode (referred to as `ChoresLog Watch App/` — adjust if Xcode names it differently). Each new `.swift` file must be added to the Watch App target.
+All source-file paths below are relative to the Watch App source folder created by Xcode (referred to as `AutoChore Watch App/` — adjust if Xcode names it differently). Each new `.swift` file must be added to the Watch App target.
 
 ---
 
@@ -44,7 +44,7 @@ All source-file paths below are relative to the Watch App source folder created 
 | `Views/AddChoreView.swift` | Dictation entry for new chore |
 | `Views/CountdownView.swift` | 3-2-1 countdown |
 | `Views/RecordingView.swift` | Timer + tap-and-hold-to-stop + upload |
-| `ChoresLogApp.swift` | App entry, routes NamePicker vs Home (modify Xcode's generated file) |
+| `AutoChoreApp.swift` | App entry, routes NamePicker vs Home (modify Xcode's generated file) |
 | Test target | XCTest unit tests for models, identity, stores |
 
 ---
@@ -129,7 +129,7 @@ enum Config {
 - [ ] **Step 2: Commit**
 
 ```bash
-git add "ChoresLog Watch App/Config.swift"
+git add "AutoChore Watch App/Config.swift"
 git commit -m "feat: add Supabase config constants"
 ```
 
@@ -139,13 +139,13 @@ git commit -m "feat: add Supabase config constants"
 
 **Files:**
 - Create: `Models/Chore.swift`
-- Test: `ChoresLogTests/ChoreTests.swift`
+- Test: `AutoChoreTests/ChoreTests.swift`
 
 - [ ] **Step 1: Write the failing test**
 
 ```swift
 import XCTest
-@testable import ChoresLog_Watch_App   // adjust to the generated module name
+@testable import AutoChore_Watch_App   // adjust to the generated module name
 
 final class ChoreTests: XCTestCase {
     func test_decodesFromSupabaseJSON() throws {
@@ -205,7 +205,7 @@ struct Chore: Codable, Identifiable, Hashable {
 - [ ] **Step 5: Commit**
 
 ```bash
-git add "ChoresLog Watch App/Models/Chore.swift" ChoresLogTests/ChoreTests.swift
+git add "AutoChore Watch App/Models/Chore.swift" AutoChoreTests/ChoreTests.swift
 git commit -m "feat: add Chore model with Supabase codable"
 ```
 
@@ -215,13 +215,13 @@ git commit -m "feat: add Chore model with Supabase codable"
 
 **Files:**
 - Create: `Models/Session.swift`
-- Test: `ChoresLogTests/SessionTests.swift`
+- Test: `AutoChoreTests/SessionTests.swift`
 
 - [ ] **Step 1: Write the failing test**
 
 ```swift
 import XCTest
-@testable import ChoresLog_Watch_App
+@testable import AutoChore_Watch_App
 
 final class SessionTests: XCTestCase {
     func test_encodesPayloadWithSnakeCaseKeys() throws {
@@ -372,7 +372,7 @@ private func isoDate(_ s: String) -> Date { isoFormatter.date(from: s) ?? Date()
 - [ ] **Step 5: Commit**
 
 ```bash
-git add "ChoresLog Watch App/Models/Session.swift" ChoresLogTests/SessionTests.swift
+git add "AutoChore Watch App/Models/Session.swift" AutoChoreTests/SessionTests.swift
 git commit -m "feat: add Session payload model with derived sample_count"
 ```
 
@@ -383,13 +383,13 @@ git commit -m "feat: add Session payload model with derived sample_count"
 **Files:**
 - Create: `Identity/CharacterNames.swift`
 - Create: `Identity/UserIdentity.swift`
-- Test: `ChoresLogTests/IdentityTests.swift`
+- Test: `AutoChoreTests/IdentityTests.swift`
 
 - [ ] **Step 1: Write the failing test**
 
 ```swift
 import XCTest
-@testable import ChoresLog_Watch_App
+@testable import AutoChore_Watch_App
 
 final class IdentityTests: XCTestCase {
     func test_randomFourAreUniqueAndFromPool() {
@@ -460,7 +460,7 @@ final class UserIdentity: ObservableObject {
 - [ ] **Step 5: Commit**
 
 ```bash
-git add "ChoresLog Watch App/Identity" ChoresLogTests/IdentityTests.swift
+git add "AutoChore Watch App/Identity" AutoChoreTests/IdentityTests.swift
 git commit -m "feat: add character name pool and locked identity store"
 ```
 
@@ -533,7 +533,7 @@ In Xcode: Product → Build (⌘B). Expected: Build succeeds.
 - [ ] **Step 3: Commit**
 
 ```bash
-git add "ChoresLog Watch App/Network/SupabaseClient.swift"
+git add "AutoChore Watch App/Network/SupabaseClient.swift"
 git commit -m "feat: add SupabaseClient for chores and sessions"
 ```
 
@@ -543,13 +543,13 @@ git commit -m "feat: add SupabaseClient for chores and sessions"
 
 **Files:**
 - Create: `Storage/SessionStore.swift`
-- Test: `ChoresLogTests/SessionStoreTests.swift`
+- Test: `AutoChoreTests/SessionStoreTests.swift`
 
 - [ ] **Step 1: Write the failing test**
 
 ```swift
 import XCTest
-@testable import ChoresLog_Watch_App
+@testable import AutoChore_Watch_App
 
 final class SessionStoreTests: XCTestCase {
     var dir: URL!
@@ -634,7 +634,7 @@ final class SessionStore {
 - [ ] **Step 5: Commit**
 
 ```bash
-git add "ChoresLog Watch App/Storage/SessionStore.swift" ChoresLogTests/SessionStoreTests.swift
+git add "AutoChore Watch App/Storage/SessionStore.swift" AutoChoreTests/SessionStoreTests.swift
 git commit -m "feat: add SessionStore disk retry queue"
 ```
 
@@ -644,13 +644,13 @@ git commit -m "feat: add SessionStore disk retry queue"
 
 **Files:**
 - Create: `Storage/ChoreStore.swift`
-- Test: `ChoresLogTests/ChoreStoreTests.swift`
+- Test: `AutoChoreTests/ChoreStoreTests.swift`
 
 - [ ] **Step 1: Write the failing test** (cache logic only — network is injected)
 
 ```swift
 import XCTest
-@testable import ChoresLog_Watch_App
+@testable import AutoChore_Watch_App
 
 final class ChoreStoreTests: XCTestCase {
     func test_cachesAndReloadsLabels() {
@@ -716,7 +716,7 @@ final class ChoreStore: ObservableObject {
 - [ ] **Step 5: Commit**
 
 ```bash
-git add "ChoresLog Watch App/Storage/ChoreStore.swift" ChoresLogTests/ChoreStoreTests.swift
+git add "AutoChore Watch App/Storage/ChoreStore.swift" AutoChoreTests/ChoreStoreTests.swift
 git commit -m "feat: add ChoreStore with local cache and refresh"
 ```
 
@@ -806,7 +806,7 @@ final class SensorRecorder: ObservableObject {
 - [ ] **Step 3: Commit**
 
 ```bash
-git add "ChoresLog Watch App/Sensors/SensorRecorder.swift"
+git add "AutoChore Watch App/Sensors/SensorRecorder.swift"
 git commit -m "feat: add SensorRecorder for 50Hz motion, altitude, floors"
 ```
 
@@ -902,7 +902,7 @@ struct HomeView: View {
                 }
                 .padding(.horizontal, 4)
             }
-            .navigationTitle(identity.name ?? "ChoresLog")
+            .navigationTitle(identity.name ?? "AutoChore")
             .sheet(isPresented: $showAdd) { AddChoreView() }
             .navigationDestination(item: $selectedChore) { chore in
                 CountdownView(choreLabel: chore)
@@ -922,9 +922,9 @@ extension String: Identifiable { public var id: String { self } }
 - [ ] **Step 5: Commit**
 
 ```bash
-git add "ChoresLog Watch App/Views/NamePickerView.swift" \
-        "ChoresLog Watch App/Views/HomeView.swift" \
-        "ChoresLog Watch App/Views/AddChoreView.swift"
+git add "AutoChore Watch App/Views/NamePickerView.swift" \
+        "AutoChore Watch App/Views/HomeView.swift" \
+        "AutoChore Watch App/Views/AddChoreView.swift"
 git commit -m "feat: add name picker, home grid, and add-chore views"
 ```
 
@@ -1040,8 +1040,8 @@ struct RecordingView: View {
 - [ ] **Step 4: Commit**
 
 ```bash
-git add "ChoresLog Watch App/Views/CountdownView.swift" \
-        "ChoresLog Watch App/Views/RecordingView.swift"
+git add "AutoChore Watch App/Views/CountdownView.swift" \
+        "AutoChore Watch App/Views/RecordingView.swift"
 git commit -m "feat: add countdown and recording views with hold-to-stop upload"
 ```
 
@@ -1050,7 +1050,7 @@ git commit -m "feat: add countdown and recording views with hold-to-stop upload"
 ## Task 12: App entry + retry-on-launch + on-device verification
 
 **Files:**
-- Modify: `ChoresLogApp.swift` (Xcode-generated entry point)
+- Modify: `AutoChoreApp.swift` (Xcode-generated entry point)
 
 - [ ] **Step 1: Replace the generated app entry**
 
@@ -1058,7 +1058,7 @@ git commit -m "feat: add countdown and recording views with hold-to-stop upload"
 import SwiftUI
 
 @main
-struct ChoresLogApp: App {
+struct AutoChoreApp: App {
     @StateObject private var identity = UserIdentity()
     @StateObject private var choreStore = ChoreStore()
 
@@ -1115,7 +1115,7 @@ struct ChoresLogApp: App {
 - [ ] **Step 5: Commit**
 
 ```bash
-git add "ChoresLog Watch App/ChoresLogApp.swift"
+git add "AutoChore Watch App/AutoChoreApp.swift"
 git commit -m "feat: wire app entry, name-gate routing, and retry-on-launch"
 ```
 
@@ -1125,4 +1125,4 @@ git commit -m "feat: wire app entry, name-gate routing, and retry-on-launch"
 
 - **Spec coverage:** name picker (T5,T10), locked name (T5,T12), shared chore list + add (T1,T8,T10), 50 Hz motion + altimeter + floors (T9), tap-and-hold stop (T11), direct POST (T6,T11), disk retry on failure + on-launch flush (T7,T12), sessions/chores tables + indexes (T1), optional notes field (model supports it; UI entry deferred — see note below).
 - **Notes field:** the `Session` model and DB column support `notes`, but the recording UI currently posts `notes: nil`. A one-line dictation entry on the stop screen can be added later; flagged here so it isn't mistaken for missing. Confirm with user whether to include in v1.
-- **Module name:** tests use `@testable import ChoresLog_Watch_App` — adjust to the actual generated module name if Xcode differs.
+- **Module name:** tests use `@testable import AutoChore_Watch_App` — adjust to the actual generated module name if Xcode differs.
