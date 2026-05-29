@@ -22,7 +22,7 @@
 3. In the watch app target's **Info** tab, add key **`NSMotionUsageDescription`** with value:
    `AutoChore records motion to log how chores are performed.`
 
-All source-file paths below are relative to the Watch App source folder created by Xcode (referred to as `AutoChore Watch App/` — adjust if Xcode names it differently). Each new `.swift` file must be added to the Watch App target.
+All source-file paths below are relative to the Watch App source folder created by Xcode (referred to as `AutoChore/AutoChore Watch App/` — adjust if Xcode names it differently). Each new `.swift` file must be added to the Watch App target.
 
 ---
 
@@ -129,7 +129,7 @@ enum Config {
 - [ ] **Step 2: Commit**
 
 ```bash
-git add "AutoChore Watch App/Config.swift"
+git add "AutoChore/AutoChore Watch App/Config.swift"
 git commit -m "feat: add Supabase config constants"
 ```
 
@@ -139,7 +139,7 @@ git commit -m "feat: add Supabase config constants"
 
 **Files:**
 - Create: `Models/Chore.swift`
-- Test: `AutoChoreTests/ChoreTests.swift`
+- Test: `AutoChore/AutoChore Watch AppTests/ChoreTests.swift`
 
 - [ ] **Step 1: Write the failing test**
 
@@ -205,7 +205,7 @@ struct Chore: Codable, Identifiable, Hashable {
 - [ ] **Step 5: Commit**
 
 ```bash
-git add "AutoChore Watch App/Models/Chore.swift" AutoChoreTests/ChoreTests.swift
+git add "AutoChore/AutoChore Watch App/Models/Chore.swift" AutoChore/AutoChore Watch AppTests/ChoreTests.swift
 git commit -m "feat: add Chore model with Supabase codable"
 ```
 
@@ -215,7 +215,7 @@ git commit -m "feat: add Chore model with Supabase codable"
 
 **Files:**
 - Create: `Models/Session.swift`
-- Test: `AutoChoreTests/SessionTests.swift`
+- Test: `AutoChore/AutoChore Watch AppTests/SessionTests.swift`
 
 - [ ] **Step 1: Write the failing test**
 
@@ -372,7 +372,7 @@ private func isoDate(_ s: String) -> Date { isoFormatter.date(from: s) ?? Date()
 - [ ] **Step 5: Commit**
 
 ```bash
-git add "AutoChore Watch App/Models/Session.swift" AutoChoreTests/SessionTests.swift
+git add "AutoChore/AutoChore Watch App/Models/Session.swift" AutoChore/AutoChore Watch AppTests/SessionTests.swift
 git commit -m "feat: add Session payload model with derived sample_count"
 ```
 
@@ -383,7 +383,7 @@ git commit -m "feat: add Session payload model with derived sample_count"
 **Files:**
 - Create: `Identity/CharacterNames.swift`
 - Create: `Identity/UserIdentity.swift`
-- Test: `AutoChoreTests/IdentityTests.swift`
+- Test: `AutoChore/AutoChore Watch AppTests/IdentityTests.swift`
 
 - [ ] **Step 1: Write the failing test**
 
@@ -460,7 +460,7 @@ final class UserIdentity: ObservableObject {
 - [ ] **Step 5: Commit**
 
 ```bash
-git add "AutoChore Watch App/Identity" AutoChoreTests/IdentityTests.swift
+git add "AutoChore/AutoChore Watch App/Identity" AutoChore/AutoChore Watch AppTests/IdentityTests.swift
 git commit -m "feat: add character name pool and locked identity store"
 ```
 
@@ -533,7 +533,7 @@ In Xcode: Product → Build (⌘B). Expected: Build succeeds.
 - [ ] **Step 3: Commit**
 
 ```bash
-git add "AutoChore Watch App/Network/SupabaseClient.swift"
+git add "AutoChore/AutoChore Watch App/Network/SupabaseClient.swift"
 git commit -m "feat: add SupabaseClient for chores and sessions"
 ```
 
@@ -543,7 +543,7 @@ git commit -m "feat: add SupabaseClient for chores and sessions"
 
 **Files:**
 - Create: `Storage/SessionStore.swift`
-- Test: `AutoChoreTests/SessionStoreTests.swift`
+- Test: `AutoChore/AutoChore Watch AppTests/SessionStoreTests.swift`
 
 - [ ] **Step 1: Write the failing test**
 
@@ -634,7 +634,7 @@ final class SessionStore {
 - [ ] **Step 5: Commit**
 
 ```bash
-git add "AutoChore Watch App/Storage/SessionStore.swift" AutoChoreTests/SessionStoreTests.swift
+git add "AutoChore/AutoChore Watch App/Storage/SessionStore.swift" AutoChore/AutoChore Watch AppTests/SessionStoreTests.swift
 git commit -m "feat: add SessionStore disk retry queue"
 ```
 
@@ -644,7 +644,7 @@ git commit -m "feat: add SessionStore disk retry queue"
 
 **Files:**
 - Create: `Storage/ChoreStore.swift`
-- Test: `AutoChoreTests/ChoreStoreTests.swift`
+- Test: `AutoChore/AutoChore Watch AppTests/ChoreStoreTests.swift`
 
 - [ ] **Step 1: Write the failing test** (cache logic only — network is injected)
 
@@ -716,7 +716,7 @@ final class ChoreStore: ObservableObject {
 - [ ] **Step 5: Commit**
 
 ```bash
-git add "AutoChore Watch App/Storage/ChoreStore.swift" AutoChoreTests/ChoreStoreTests.swift
+git add "AutoChore/AutoChore Watch App/Storage/ChoreStore.swift" AutoChore/AutoChore Watch AppTests/ChoreStoreTests.swift
 git commit -m "feat: add ChoreStore with local cache and refresh"
 ```
 
@@ -806,7 +806,7 @@ final class SensorRecorder: ObservableObject {
 - [ ] **Step 3: Commit**
 
 ```bash
-git add "AutoChore Watch App/Sensors/SensorRecorder.swift"
+git add "AutoChore/AutoChore Watch App/Sensors/SensorRecorder.swift"
 git commit -m "feat: add SensorRecorder for 50Hz motion, altitude, floors"
 ```
 
@@ -922,9 +922,9 @@ extension String: Identifiable { public var id: String { self } }
 - [ ] **Step 5: Commit**
 
 ```bash
-git add "AutoChore Watch App/Views/NamePickerView.swift" \
-        "AutoChore Watch App/Views/HomeView.swift" \
-        "AutoChore Watch App/Views/AddChoreView.swift"
+git add "AutoChore/AutoChore Watch App/Views/NamePickerView.swift" \
+        "AutoChore/AutoChore Watch App/Views/HomeView.swift" \
+        "AutoChore/AutoChore Watch App/Views/AddChoreView.swift"
 git commit -m "feat: add name picker, home grid, and add-chore views"
 ```
 
@@ -1040,8 +1040,8 @@ struct RecordingView: View {
 - [ ] **Step 4: Commit**
 
 ```bash
-git add "AutoChore Watch App/Views/CountdownView.swift" \
-        "AutoChore Watch App/Views/RecordingView.swift"
+git add "AutoChore/AutoChore Watch App/Views/CountdownView.swift" \
+        "AutoChore/AutoChore Watch App/Views/RecordingView.swift"
 git commit -m "feat: add countdown and recording views with hold-to-stop upload"
 ```
 
@@ -1115,7 +1115,7 @@ struct AutoChoreApp: App {
 - [ ] **Step 5: Commit**
 
 ```bash
-git add "AutoChore Watch App/AutoChoreApp.swift"
+git add "AutoChore/AutoChore Watch App/AutoChoreApp.swift"
 git commit -m "feat: wire app entry, name-gate routing, and retry-on-launch"
 ```
 
