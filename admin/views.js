@@ -67,7 +67,7 @@ function durationStr(start, end) {
 function fmtDate(iso) {
   const d = new Date(iso);
   if (isNaN(d)) return esc(iso);
-  return d.toLocaleString();
+  return d.toLocaleString('en-AU', { timeZone: 'Australia/Sydney' }) + ' AEST/AEDT';
 }
 
 function listPage(sessions, facets, selected) {
