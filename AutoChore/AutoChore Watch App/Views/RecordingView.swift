@@ -62,10 +62,12 @@ struct RecordingView: View {
         }
         .onAppear {
             startTime = Date()
+            Task { await recorder.requestAuthorization() }
             recorder.start()
         }
         .onReceive(timer) { _ in
-            if status == .recording { elapsed += 1 }
+            // Derive from wall clock so it stays correct even if ticks are missed.
+            if status == .recording { elapsed = Int(Date().timeIntervalSince(startTime)) }
         }
     }
 

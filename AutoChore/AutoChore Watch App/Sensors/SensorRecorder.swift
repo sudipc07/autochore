@@ -8,15 +8,25 @@ final class SensorRecorder: ObservableObject {
     private let altimeter = CMAltimeter()
     private let pedometer = CMPedometer()
     private let queue = OperationQueue()
+    private let keepAlive = WorkoutKeepAlive()
 
     private var startDate = Date()
     private var motionSamples: [MotionSample] = []
     private var altitudeSamples: [AltitudeSample] = []
 
+    /// Request workout permission once (call at app launch).
+    func requestAuthorization() async {
+        await keepAlive.requestAuthorization()
+    }
+
     func start() {
         startDate = Date()
         motionSamples.removeAll()
         altitudeSamples.removeAll()
+
+        // Hold a workout session so watchOS keeps delivering 50 Hz with the
+        // screen off / wrist down.
+        keepAlive.start()
 
         motion.deviceMotionUpdateInterval = 1.0 / Double(Config.sampleRate)
         if motion.isDeviceMotionAvailable {
