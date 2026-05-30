@@ -42,7 +42,26 @@ async function listSessions({ chore, user } = {}) {
 
 async function getSession(id) {
   const rows = await restGet('sessions', { select: '*', id: `eq.${id}`, limit: 1 });
-  return rows[0] || null;
+  const s = rows[0];
+  if (!s) return null;
+
+  // Newer sessions store samples as a file in Storage; older ones inline.
+  const hasInline = Array.isArray(s.motion_samples) && s.motion_samples.length > 0;
+  if (s.samples_path && !hasInline) {
+    const url = `${SUPABASE_URL}/storage/v1/object/public/raw-sessions/${s.samples_path}`;
+    try {
+      const res = await fetch(url, { headers: { apikey: SUPABASE_KEY } });
+      if (res.ok) {
+        const raw = await res.json();
+        s.motion_samples = raw.motion_samples || [];
+        s.altitude_samples = raw.altitude_samples || [];
+      }
+    } catch (_) {
+      s.motion_samples = s.motion_samples || [];
+      s.altitude_samples = s.altitude_samples || [];
+    }
+  }
+  return s;
 }
 
 // Distinct chore/user values for the filter dropdowns.

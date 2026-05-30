@@ -99,7 +99,7 @@ struct RecordingView: View {
                 altitudeSamples: result.altitude,
                 floorSummary: result.floors)
             do {
-                try await client.postSession(session)
+                try await client.uploadSession(session)
                 status = .done
             } catch {
                 _ = try? store.save(session)

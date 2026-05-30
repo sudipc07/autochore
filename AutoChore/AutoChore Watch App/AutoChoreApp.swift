@@ -28,7 +28,7 @@ struct AutoChore_Watch_AppApp: App {
         let client = SupabaseClient()
         for pending in store.loadPending() {
             do {
-                try await client.postSession(pending.session)
+                try await client.uploadSession(pending.session)
                 store.remove(pending.id)
             } catch {
                 // Keep on disk; retry on the next launch.
