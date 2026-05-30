@@ -28,6 +28,7 @@ struct RecordingView: View {
 
     @State private var startTime = Date()
     @State private var status: Status = .recording
+    @State private var autoStopTask: Task<Void, Never>?
 
     private let store = SessionStore()
     private let client = SupabaseClient()
@@ -50,6 +51,9 @@ struct RecordingView: View {
                     .padding(.horizontal, 14).padding(.vertical, 8)
                     .background(Capsule().fill(.red.opacity(0.35)))
                     .onLongPressGesture(minimumDuration: 1.0) { stopAndUpload() }
+                Text("Auto-stops at \(Config.maxRecordingSeconds / 60) min")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
             case .uploading:
                 ProgressView("Uploading…")
             case .done:
@@ -64,10 +68,23 @@ struct RecordingView: View {
             startTime = Date()
             Task { await recorder.requestAuthorization() }
             recorder.start()
+            scheduleAutoStop()
+        }
+        .onDisappear { autoStopTask?.cancel() }
+    }
+
+    /// Auto-stop after the cap so a forgotten session doesn't run forever.
+    private func scheduleAutoStop() {
+        autoStopTask = Task {
+            let ns = UInt64(Config.maxRecordingSeconds) * 1_000_000_000
+            try? await Task.sleep(nanoseconds: ns)
+            if !Task.isCancelled && status == .recording { stopAndUpload() }
         }
     }
 
     private func stopAndUpload() {
+        guard status == .recording else { return }   // ignore double-trigger
+        autoStopTask?.cancel()
         status = .uploading
         Task {
             let result = await recorder.stop()
