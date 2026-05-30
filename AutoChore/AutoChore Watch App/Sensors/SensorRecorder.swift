@@ -54,7 +54,7 @@ final class SensorRecorder: ObservableObject {
                     mx: hasMag ? field.x : nil,
                     my: hasMag ? field.y : nil,
                     mz: hasMag ? field.z : nil,
-                    magacc: acc.rawValue,
+                    magacc: Int(acc.rawValue),
                     heading: dm.heading >= 0 ? dm.heading : nil)
                 Task { @MainActor in self.motionSamples.append(sample) }
             }
