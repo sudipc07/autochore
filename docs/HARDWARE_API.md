@@ -78,18 +78,37 @@ POST https://jehrccwdwrjybzzksgmr.supabase.co/rest/v1/sessions
 
 ### `motion_samples` element
 
+The Watch records a rich per-sample set. Your board only needs to send what it has — **accelerometer + gyroscope are the core**; everything else is optional (send `null` or omit).
+
 ```json
-{ "t": 0, "ax": 0.01, "ay": -0.02, "az": 0.98,
+{ "t": 0,
+  "ax": 0.01, "ay": -0.02, "az": 0.98,
   "gx": 0.0, "gy": 0.1, "gz": -0.05,
-  "mx": 12.3, "my": 8.1, "mz": -40.2 }
+  "mx": 12.3, "my": 8.1, "mz": -40.2,
+  "gravx": 0.0, "gravy": 0.0, "gravz": 1.0,
+  "roll": 0.1, "pitch": -0.2, "yaw": 1.3,
+  "qw": 1.0, "qx": 0.0, "qy": 0.0, "qz": 0.0,
+  "magacc": 2, "heading": 270.0 }
 ```
 
-- `t` — **milliseconds since the session start** (integer). First sample `t: 0`.
-- `ax, ay, az` — accelerometer, 3 axes
-- `gx, gy, gz` — gyroscope, 3 axes
-- `mx, my, mz` — magnetometer, 3 axes. **Optional** — send `null` (or omit) if your board has no magnetometer.
+| Field | Meaning | Board guidance |
+|-------|---------|----------------|
+| `t` | ms since session start (first = 0) | **required** |
+| `ax ay az` | accelerometer, 3 axes | **required** |
+| `gx gy gz` | gyroscope, 3 axes | **required** if you have one |
+| `mx my mz` | magnetometer, 3 axes | optional (`null` if none) |
+| `gravx gravy gravz` | gravity vector (Apple splits this out) | optional — omit/`null` |
+| `roll pitch yaw` | orientation (Euler, rad) | optional — only if you do sensor fusion |
+| `qw qx qy qz` | orientation quaternion | optional |
+| `magacc` | mag accuracy (-1..2) | optional |
+| `heading` | compass degrees | optional |
 
-**Units (for comparability with the Watch data):** the Watch reports acceleration in **g** (gravity units) and rotation in **radians/second**. Match those if you can; if your IMU outputs raw counts or m/s², that's fine for the experiment — just tell us the units so we can normalize later.
+**Just send `t`, `ax/ay/az`, `gx/gy/gz`** (and `mx/my/mz` if available) and leave the rest out — that's totally fine. The fields beyond those are values Apple's Watch fuses internally; a raw board won't have them.
+
+**Units / comparability — important:**
+- The Watch reports acceleration in **g** with **gravity already removed** (`ax/ay/az` is *linear* acceleration; the gravity component is in `gravx/gravy/gravz` separately). A raw IMU's accel **includes gravity** — so your raw accel ≈ the Watch's `ax+gravx`, etc. Keep that in mind when comparing.
+- Watch rotation is in **radians/second**.
+- If your IMU outputs m/s² or raw counts, that's fine — **just tell us the units** so we can normalize later.
 
 ### `altitude_samples` element (optional)
 

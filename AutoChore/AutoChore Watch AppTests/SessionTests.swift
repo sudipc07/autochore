@@ -11,8 +11,12 @@ final class SessionTests: XCTestCase {
             sampleRate: 50,
             notes: "test",
             motionSamples: [MotionSample(t: 0, ax: 1, ay: 2, az: 3,
+                                         gravx: 0, gravy: 0, gravz: 1,
                                          gx: 4, gy: 5, gz: 6,
-                                         mx: 7, my: 8, mz: 9)],
+                                         roll: 0.1, pitch: 0.2, yaw: 0.3,
+                                         qw: 1, qx: 0, qy: 0, qz: 0,
+                                         mx: 7, my: 8, mz: 9,
+                                         magacc: 2, heading: 180)],
             altitudeSamples: [AltitudeSample(t: 0, relativeAltitude: 1.5)],
             floorSummary: FloorSummary(floorsAscended: 2, floorsDescended: 1)
         )

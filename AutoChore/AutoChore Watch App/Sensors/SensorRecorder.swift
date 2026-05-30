@@ -39,15 +39,23 @@ final class SensorRecorder: ObservableObject {
             motion.startDeviceMotionUpdates(using: frame, to: queue) { [weak self] dm, _ in
                 guard let self, let dm else { return }
                 let t = Int(Date().timeIntervalSince(self.startDate) * 1000)
+                let att = dm.attitude
+                let q = att.quaternion
                 let field = dm.magneticField.field
-                let hasMag = dm.magneticField.accuracy != .uncalibrated
+                let acc = dm.magneticField.accuracy
+                let hasMag = acc != .uncalibrated
                 let sample = MotionSample(
                     t: t,
                     ax: dm.userAcceleration.x, ay: dm.userAcceleration.y, az: dm.userAcceleration.z,
+                    gravx: dm.gravity.x, gravy: dm.gravity.y, gravz: dm.gravity.z,
                     gx: dm.rotationRate.x, gy: dm.rotationRate.y, gz: dm.rotationRate.z,
+                    roll: att.roll, pitch: att.pitch, yaw: att.yaw,
+                    qw: q.w, qx: q.x, qy: q.y, qz: q.z,
                     mx: hasMag ? field.x : nil,
                     my: hasMag ? field.y : nil,
-                    mz: hasMag ? field.z : nil)
+                    mz: hasMag ? field.z : nil,
+                    magacc: acc.rawValue,
+                    heading: dm.heading >= 0 ? dm.heading : nil)
                 Task { @MainActor in self.motionSamples.append(sample) }
             }
         }

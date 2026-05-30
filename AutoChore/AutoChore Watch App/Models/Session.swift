@@ -1,10 +1,15 @@
 import Foundation
 
 struct MotionSample: Codable {
-    let t: Int            // ms offset from start
-    let ax, ay, az: Double
-    let gx, gy, gz: Double
-    let mx, my, mz: Double?
+    let t: Int                      // ms offset from start
+    let ax, ay, az: Double          // user acceleration (gravity removed), g
+    let gravx, gravy, gravz: Double // gravity vector, g
+    let gx, gy, gz: Double          // rotation rate (gyroscope), rad/s
+    let roll, pitch, yaw: Double    // attitude (Euler), radians
+    let qw, qx, qy, qz: Double      // attitude quaternion
+    let mx, my, mz: Double?         // calibrated magnetic field, µT (nil if uncalibrated)
+    let magacc: Int                 // mag accuracy: -1 uncalibrated, 0 low, 1 med, 2 high
+    let heading: Double?            // heading, degrees (nil if unavailable)
 }
 
 struct AltitudeSample: Codable {

@@ -144,12 +144,24 @@ function detailPage(session) {
   <h2>Accelerometer magnitude</h2>
   <canvas id="accelMagChart" height="110"></canvas>
 
+  <h2>Gravity (g) — X / Y / Z</h2>
+  <canvas id="gravChart" height="120"></canvas>
+  <p id="gravNote" class="empty" style="display:none">No gravity data in this session.</p>
+
   <h2>Gyroscope (rad/s) — X / Y / Z</h2>
   <canvas id="gyroChart" height="120"></canvas>
+
+  <h2>Orientation (rad) — Roll / Pitch / Yaw</h2>
+  <canvas id="oriChart" height="120"></canvas>
+  <p id="oriNote" class="empty" style="display:none">No orientation data in this session.</p>
 
   <h2>Magnetometer (µT) — X / Y / Z</h2>
   <canvas id="magChart" height="120"></canvas>
   <p id="magNote" class="empty" style="display:none">No magnetometer data in this session.</p>
+
+  <h2>Heading (°)</h2>
+  <canvas id="headingChart" height="110"></canvas>
+  <p id="headingNote" class="empty" style="display:none">No heading data in this session.</p>
 
   <h2>Relative altitude (m)</h2>
   <canvas id="altChart" height="110"></canvas>

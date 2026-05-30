@@ -55,9 +55,22 @@
 		6AC5C25C2FC9C32A0043DCA0 /* AutoChore Watch AppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "AutoChore Watch AppUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		6A97E0CB2FCB11D100B75F57 /* Exceptions for "AutoChore Watch App" folder in "AutoChore Watch App" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"AutoChore-Watch-App-Info.plist",
+			);
+			target = 6AC5C2422FC9C3270043DCA0 /* AutoChore Watch App */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		6AC5C2472FC9C3270043DCA0 /* AutoChore Watch App */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				6A97E0CB2FCB11D100B75F57 /* Exceptions for "AutoChore Watch App" folder in "AutoChore Watch App" target */,
+			);
 			path = "AutoChore Watch App";
 			sourceTree = "<group>";
 		};
@@ -461,8 +474,10 @@
 				DEVELOPMENT_TEAM = 5G9YXUM3J3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "AutoChore-Watch-App-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = AutoChore;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_ITSEncryptionExportComplianceCode = "";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "AutoChore uses a workout session to keep sensors recording while you work.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "AutoChore uses a workout session to keep sensors recording while you work.";
 				INFOPLIST_KEY_NSMotionUsageDescription = "AutoChore records motion to log how chores are performed.";
@@ -494,13 +509,16 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
+				CODE_SIGN_ENTITLEMENTS = "AutoChore Watch App/AutoChore Watch AppRelease.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 5G9YXUM3J3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "AutoChore-Watch-App-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = AutoChore;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_ITSEncryptionExportComplianceCode = "";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "AutoChore uses a workout session to keep sensors recording while you work.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "AutoChore uses a workout session to keep sensors recording while you work.";
 				INFOPLIST_KEY_NSMotionUsageDescription = "AutoChore records motion to log how chores are performed.";
