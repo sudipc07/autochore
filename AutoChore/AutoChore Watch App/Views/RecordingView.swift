@@ -1,5 +1,4 @@
 import SwiftUI
-import Combine
 
 /// The full record flow for one chore: countdown → recording → upload.
 /// Presented as a cover; calls `onDone` to dismiss back to Home.
@@ -28,12 +27,10 @@ struct RecordingView: View {
     @StateObject private var recorder = SensorRecorder()
 
     @State private var startTime = Date()
-    @State private var elapsed = 0
     @State private var status: Status = .recording
 
     private let store = SessionStore()
     private let client = SupabaseClient()
-    private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     enum Status { case recording, uploading, done, failed }
 
@@ -43,8 +40,11 @@ struct RecordingView: View {
 
             switch status {
             case .recording:
-                Text(timeString(elapsed))
+                // System-updated stopwatch — stays correct in Always-On Display
+                // and while backgrounded (counts up from startTime).
+                Text(startTime, style: .timer)
                     .font(.system(size: 34, weight: .semibold).monospacedDigit())
+                    .multilineTextAlignment(.center)
                 Text("Hold to stop")
                     .font(.footnote)
                     .padding(.horizontal, 14).padding(.vertical, 8)
@@ -64,10 +64,6 @@ struct RecordingView: View {
             startTime = Date()
             Task { await recorder.requestAuthorization() }
             recorder.start()
-        }
-        .onReceive(timer) { _ in
-            // Derive from wall clock so it stays correct even if ticks are missed.
-            if status == .recording { elapsed = Int(Date().timeIntervalSince(startTime)) }
         }
     }
 
@@ -95,9 +91,5 @@ struct RecordingView: View {
             try? await Task.sleep(nanoseconds: 1_400_000_000)
             onDone()
         }
-    }
-
-    private func timeString(_ s: Int) -> String {
-        String(format: "%02d:%02d", s / 60, s % 60)
     }
 }
