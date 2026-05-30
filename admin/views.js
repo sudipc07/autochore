@@ -138,11 +138,21 @@ function detailPage(session) {
     <button class="btn" id="copyJson">Copy JSON</button>
   </div>
 
-  <h2>Accelerometer magnitude</h2>
+  <h2>Accelerometer (g) — X / Y / Z</h2>
   <canvas id="accelChart" height="120"></canvas>
 
+  <h2>Accelerometer magnitude</h2>
+  <canvas id="accelMagChart" height="110"></canvas>
+
+  <h2>Gyroscope (rad/s) — X / Y / Z</h2>
+  <canvas id="gyroChart" height="120"></canvas>
+
+  <h2>Magnetometer (µT) — X / Y / Z</h2>
+  <canvas id="magChart" height="120"></canvas>
+  <p id="magNote" class="empty" style="display:none">No magnetometer data in this session.</p>
+
   <h2>Relative altitude (m)</h2>
-  <canvas id="altChart" height="120"></canvas>
+  <canvas id="altChart" height="110"></canvas>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script id="session-data" type="application/json">${JSON.stringify({

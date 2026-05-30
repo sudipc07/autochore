@@ -20,7 +20,13 @@ final class SensorRecorder: ObservableObject {
 
         motion.deviceMotionUpdateInterval = 1.0 / Double(Config.sampleRate)
         if motion.isDeviceMotionAvailable {
-            motion.startDeviceMotionUpdates(to: queue) { [weak self] dm, _ in
+            // Use a magnetic-north reference frame so the calibrated magnetometer
+            // is populated; fall back gracefully if it isn't available.
+            let available = CMMotionManager.availableAttitudeReferenceFrames()
+            let frame: CMAttitudeReferenceFrame = available.contains(.xMagneticNorthZVertical)
+                ? .xMagneticNorthZVertical
+                : .xArbitraryZVertical
+            motion.startDeviceMotionUpdates(using: frame, to: queue) { [weak self] dm, _ in
                 guard let self, let dm else { return }
                 let t = Int(Date().timeIntervalSince(self.startDate) * 1000)
                 let field = dm.magneticField.field
