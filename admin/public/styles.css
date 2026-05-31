@@ -71,6 +71,13 @@ td.notes { color: var(--muted); max-width: 220px; overflow: hidden; text-overflo
 
 .back { color: var(--accent); text-decoration: none; font-size: 14px; display: inline-block; margin-bottom: 10px; }
 
+.analysis { background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 10px; padding: 14px 16px; margin: 4px 0 18px; }
+.analysis-head { font-size: 12px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); margin-bottom: 6px; }
+.analysis-summary { font-size: 16px; margin: 0 0 10px; line-height: 1.4; }
+.analysis ul { margin: 0; padding-left: 18px; }
+.analysis li { color: var(--text); margin: 2px 0; font-size: 14px; }
+.analysis-note { color: var(--muted); font-size: 12px; margin: 10px 0 0; }
+
 dl.meta { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin: 0 0 8px; }
 dl.meta dt { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
 dl.meta dd { margin: 2px 0 0; }

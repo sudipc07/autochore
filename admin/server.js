@@ -26,6 +26,7 @@ const {
   sessionCountsByUser,
 } = require('./supabase');
 const { motionSamplesToCSV } = require('./csv');
+const { analyzeMotion } = require('./analysis');
 const { loginPage, listPage, detailPage, devicesPage } = require('./views');
 
 const PORT = process.env.PORT || 3003;
@@ -95,7 +96,7 @@ app.get('/session/:id', requireAuth, async (req, res, next) => {
   try {
     const session = await getSession(req.params.id);
     if (!session) return res.status(404).send('Session not found');
-    res.send(detailPage(session));
+    res.send(detailPage(session, analyzeMotion(session)));
   } catch (err) {
     next(err);
   }

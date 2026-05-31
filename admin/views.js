@@ -118,11 +118,20 @@ function listPage(sessions, facets, selected) {
   return layout('Sessions', body);
 }
 
-function detailPage(session) {
+function detailPage(session, analysis) {
   const f = session.floor_summary || {};
+  const analysisCard = analysis
+    ? `<section class="analysis">
+         <div class="analysis-head">${esc(session.chore_label)} — motion analysis</div>
+         <p class="analysis-summary">${esc(analysis.summary)}</p>
+         <ul>${analysis.bullets.map((b) => `<li>${esc(b)}</li>`).join('')}</ul>
+         <p class="analysis-note">Inferred from the accelerometer signal (device-independent features).</p>
+       </section>`
+    : `<section class="analysis"><p class="analysis-note">Not enough samples to analyze.</p></section>`;
   const body = `
   <a class="back" href="/">← All sessions</a>
   <h1>${esc(session.chore_label)} · ${esc(session.user_id)}</h1>
+  ${analysisCard}
   <dl class="meta">
     <div><dt>Started</dt><dd>${fmtDate(session.start_time)}</dd></div>
     <div><dt>Ended</dt><dd>${fmtDate(session.end_time)}</dd></div>
