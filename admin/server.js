@@ -24,10 +24,39 @@ const {
   listFacets,
   listDevices,
   sessionCountsByUser,
+  listSessionsMeta,
 } = require('./supabase');
 const { motionSamplesToCSV } = require('./csv');
-const { analyzeMotion } = require('./analysis');
+const { analyzeMotion, motionFeatures, choreSummary } = require('./analysis');
 const { loginPage, listPage, detailPage, devicesPage } = require('./views');
+
+// Sessions are immutable once uploaded, so cache computed features by id.
+const featCache = new Map();
+async function getFeatures(id) {
+  if (featCache.has(id)) return featCache.get(id);
+  const s = await getSession(id);
+  const f = s ? motionFeatures(s) : null;
+  featCache.set(id, f);
+  return f;
+}
+// Below this effective sample rate, the stroke-frequency estimate is unreliable
+// (aliasing), so those sessions are excluded from the signature comparison.
+const MIN_RELIABLE_HZ = 25;
+
+async function computeChoreSummary() {
+  const meta = await listSessionsMeta();
+  const items = [];
+  let excluded = 0;
+  for (const r of meta) {
+    const f = await getFeatures(r.id);
+    if (f && f.fs >= MIN_RELIABLE_HZ) {
+      items.push({ chore: r.chore_label, features: f });
+    } else if (f) {
+      excluded++;
+    }
+  }
+  return { rows: choreSummary(items), excluded };
+}
 
 const PORT = process.env.PORT || 3003;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'change-me';
@@ -76,8 +105,12 @@ app.post('/logout', (req, res) => {
 app.get('/', requireAuth, async (req, res, next) => {
   try {
     const selected = { chore: req.query.chore || '', user: req.query.user || '' };
-    const [sessions, facets] = await Promise.all([listSessions(selected), listFacets()]);
-    res.send(listPage(sessions, facets, selected));
+    const [sessions, facets, summary] = await Promise.all([
+      listSessions(selected),
+      listFacets(),
+      computeChoreSummary(),
+    ]);
+    res.send(listPage(sessions, facets, selected, summary));
   } catch (err) {
     next(err);
   }

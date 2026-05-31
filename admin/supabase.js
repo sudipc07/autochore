@@ -72,6 +72,11 @@ async function listFacets() {
   return { chores, users };
 }
 
+// Lightweight metadata for every session (no heavy sample arrays).
+async function listSessionsMeta() {
+  return restGet('sessions', { select: 'id,chore_label,samples_path', order: 'created_at.desc' });
+}
+
 async function listDevices() {
   return restGet('devices', { select: '*', order: 'created_at.asc' });
 }
@@ -84,4 +89,11 @@ async function sessionCountsByUser() {
   return counts;
 }
 
-module.exports = { listSessions, getSession, listFacets, listDevices, sessionCountsByUser };
+module.exports = {
+  listSessions,
+  getSession,
+  listFacets,
+  listDevices,
+  sessionCountsByUser,
+  listSessionsMeta,
+};

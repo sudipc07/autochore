@@ -69,6 +69,17 @@ td.notes { color: var(--muted); max-width: 220px; overflow: hidden; text-overflo
 
 .empty { color: var(--muted); padding: 40px 0; text-align: center; }
 
+.summary { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin-bottom: 22px; }
+.summary h2 { margin: 0 0 10px; color: var(--text); font-size: 15px; }
+.summary-table { width: 100%; border-collapse: collapse; }
+.summary-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); padding: 6px 10px; border-bottom: 1px solid var(--line); }
+.summary-table td { padding: 8px 10px; border-bottom: 1px solid var(--line); font-size: 14px; }
+.summary-table tr:last-child td { border-bottom: none; }
+.summary .hint { color: var(--muted); font-size: 12px; margin: 10px 0 0; }
+.tag { display: inline-block; font-size: 10px; text-transform: uppercase; letter-spacing: .4px; padding: 1px 7px; border-radius: 20px; margin-left: 4px; vertical-align: middle; }
+.tag-slowest, .tag-smoothest { background: rgba(52,199,89,.18); color: #34c759; }
+.tag-fastest, .tag-burstiest { background: rgba(255,107,107,.18); color: #ff6b6b; }
+
 .back { color: var(--accent); text-decoration: none; font-size: 14px; display: inline-block; margin-bottom: 10px; }
 
 .analysis { background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 10px; padding: 14px 16px; margin: 4px 0 18px; }

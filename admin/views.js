@@ -70,7 +70,35 @@ function fmtDate(iso) {
   return d.toLocaleString('en-AU', { timeZone: 'Australia/Sydney' }) + ' AEST/AEDT';
 }
 
-function listPage(sessions, facets, selected) {
+function summarySection(summary) {
+  const rowsData = (summary && summary.rows) || [];
+  const excluded = (summary && summary.excluded) || 0;
+  if (!rowsData.length) return '';
+  const rows = rowsData
+    .map((r) => {
+      const tags = (r.tags || [])
+        .map((t) => `<span class="tag tag-${esc(t)}">${esc(t)}</span>`)
+        .join(' ');
+      return `<tr>
+        <td><strong>${esc(r.chore)}</strong> ${tags}</td>
+        <td>${r.sessions}</td>
+        <td>${r.strokePerMin}/min</td>
+        <td>${esc(r.signature)}</td>
+      </tr>`;
+    })
+    .join('');
+  return `
+  <section class="summary">
+    <h2>Chore signatures</h2>
+    <table class="summary-table">
+      <thead><tr><th>Chore</th><th>Sessions</th><th>Rhythm</th><th>Signature</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <p class="hint">Inferred from accelerometer rhythm + burstiness (device-independent). Sorted slowest → fastest.${excluded ? ` ${excluded} low-sample-rate session(s) excluded for reliable rhythm.` : ''} More sessions sharpen this.</p>
+  </section>`;
+}
+
+function listPage(sessions, facets, selected, summary) {
   const choreOpts = facets.chores
     .map((c) => `<option value="${esc(c)}"${c === selected.chore ? ' selected' : ''}>${esc(c)}</option>`)
     .join('');
@@ -94,6 +122,7 @@ function listPage(sessions, facets, selected) {
     .join('');
 
   const body = `
+  ${summarySection(summary)}
   <h1>Sessions <span class="count">${sessions.length}</span></h1>
   <form class="filters" method="get" action="/">
     <select name="chore" onchange="this.form.submit()">
