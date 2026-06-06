@@ -1,6 +1,6 @@
-# CHARM — Dashboard Design Brief (for Google Stitch)
+# CHARM Band — Dashboard Design Brief (for Google Stitch)
 
-CHARM = **Continuous Human Activity Recognition Module**.
+The product is the **CHARM Band**. CHARM = Continuous Human Activity Recognition Module.
 
 A brief to generate the **executive/supervisor dashboard** UI for an enterprise facilities product. Paste the "Context" section into Stitch first, then generate each screen from its prompt. Goal: a polished, pitch-ready design for facility-services executives.
 
@@ -8,7 +8,7 @@ A brief to generate the **executive/supervisor dashboard** UI for an enterprise 
 
 ## Context (paste this into Stitch first)
 
-CHARM is an **enterprise B2B operations dashboard** for **commercial cleaning and facilities management** — used by supervisors and executives at large facility-services companies that clean offices, hospitals, malls, and airports.
+CHARM Band is an **enterprise B2B operations dashboard** for **commercial cleaning and facilities management** — used by supervisors and executives at large facility-services companies that clean offices, hospitals, malls, and airports.
 
 **How the data is captured:** each cleaning staff member wears a **screen-free wrist band** (a wearable, like a fitness tracker) for their shift. The band has motion and altitude sensors and automatically records their activity — the worker does nothing, taps no buttons. At the end of the shift the band is returned to base and **uploads the day's data**, which is processed and shown in this dashboard. (Data arrives per shift, not live.)
 
