@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CHARM Band — Team</title>
 <link rel="stylesheet" href="styles.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
 <div class="app">
@@ -28,28 +27,45 @@
 
     <div class="content">
       <h1 class="page-title">Team</h1>
-      <p class="page-sub">Morning shift · 8 staff on duty</p>
+      <p class="page-sub">Morning shift · 8 staff on duty · select a member to view their shift</p>
 
-      <div class="grid kpis">
-        <div class="kpi"><div class="label">Staff on shift</div><div class="value">8</div><div class="delta">2 on break</div></div>
-        <div class="kpi"><div class="label">Avg utilisation</div><div class="value">81%</div><div class="delta up">▲ 3%</div></div>
-        <div class="kpi"><div class="label">Avg coverage</div><div class="value">86%</div></div>
-        <div class="kpi alert"><div class="label">Open exceptions</div><div class="value">5</div><div class="delta" style="color:var(--error)">across 4 staff</div></div>
-      </div>
+      <div class="team-grid">
+        <!-- LEFT: worker list -->
+        <div class="wlist" id="wlist"></div>
 
-      <div class="grid cols-2-1 mt">
-        <div class="card pad">
-          <div class="section-title">Roster</div>
-          <div class="section-sub">Tap a team member to view their shift</div>
-          <table class="data" id="roster">
-            <thead><tr><th>Worker</th><th>Assigned Zone</th><th>Status</th><th>Coverage</th><th>Utilisation</th><th>Flags</th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <div class="card pad">
-          <div class="section-title">Utilisation by worker</div>
-          <div class="section-sub">Active time this shift</div>
-          <canvas id="utilChart" height="260"></canvas>
+        <!-- RIGHT: detail -->
+        <div>
+          <div class="card pad">
+            <div class="who-cell" style="gap:14px">
+              <div class="avatar" id="dAvatar" style="width:46px;height:46px;font-size:16px">AR</div>
+              <div><div class="section-title" style="margin:0" id="dName">—</div><p class="muted" id="dMeta" style="margin:2px 0 0"></p></div>
+            </div>
+            <div class="grid kpis" style="grid-template-columns:repeat(4,1fr);margin-top:18px">
+              <div class="stat"><div class="label">Active work</div><div class="value" id="dActive">—</div></div>
+              <div class="stat"><div class="label">Transit</div><div class="value" id="dTransit">—</div></div>
+              <div class="stat"><div class="label">Idle</div><div class="value" id="dIdle">—</div></div>
+              <div class="stat"><div class="label">Coverage</div><div class="value" id="dCoverage">—</div></div>
+            </div>
+          </div>
+
+          <div class="card pad mt">
+            <div class="section-title">Shift Trace</div>
+            <div class="section-sub">Reconstructed from CHARM™ Band sensor data</div>
+            <div class="trace">
+              <div class="trace-pins"><span class="pin"><i></i> Pair · 08:00</span><span class="pin right">Return · 16:00 <i></i></span></div>
+              <div class="trace-bars" id="traceBars"></div>
+              <div class="trace-labels" id="traceLabels"></div>
+              <div class="trace-axis"><span>08:00</span><span>10:00</span><span>12:00</span><span>14:00</span><span>16:00</span></div>
+              <p class="muted" style="font-size:12px;margin-top:14px">Width shows duration. Height shows activity intensity.</p>
+            </div>
+          </div>
+
+          <div class="card pad mt">
+            <div class="section-title">Vs Assignment</div>
+            <div class="section-sub">Did the shift match the roster?</div>
+            <div class="narrative" style="font-size:15px"><div class="tag">✦ AI Summary</div><span id="dNarrative"></span></div>
+            <div class="mt" id="dChecklist"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -57,41 +73,94 @@
 </div>
 
 <script>
-const TEAM = [
-  { initials:'AR', name:'Alex Reed',      zone:'North Wing · F1/F2', status:['ok','In progress'], coverage:94, util:88, flags:0, color:'#4b41e1' },
-  { initials:'SC', name:'Sarah Chen',     zone:'Tech Suites · F4',   status:['neutral','Idle'],   coverage:88, util:74, flags:0, color:'#7c83a0' },
-  { initials:'JM', name:'James Miller',   zone:'Floor 3 · Sector A', status:['bad','Exception'],  coverage:61, util:69, flags:2, color:'#c2603a' },
-  { initials:'MJ', name:'Marcus Johnson', zone:'Floor 2 · West',     status:['neutral','Idle'],   coverage:72, util:58, flags:1, color:'#0a7d57' },
-  { initials:'BK', name:'Bina Kapoor',    zone:'Lobby · F1',         status:['ok','In progress'], coverage:90, util:85, flags:1, color:'#8b5cf6' },
-  { initials:'DA', name:'Diego Alvarez',  zone:'Floor 5 · Offices',  status:['ok','Transit'],     coverage:83, util:80, flags:0, color:'#0891b2' },
-  { initials:'ML', name:'Mei Lin',        zone:'Floor 6 · Exec Wing',status:['ok','In progress'], coverage:97, util:91, flags:0, color:'#db2777' },
-  { initials:"TO", name:"Tom O'Brien",    zone:'Service · Basement', status:['bad','Exception'],  coverage:67, util:64, flags:1, color:'#b45309' },
+const TASK_COLORS = { Mop:'#10b981', Scrub:'#4b41e1', Vacuum:'#8b5cf6', Dust:'#f59e0b', Transit:'#94a3b8', Idle:'#cbd5e1' };
+const RECEDE = new Set(['Transit','Idle']);
+
+// Reusable 480-min trace templates
+const TRACES = {
+  mop:     [['Transit',45,42],['Mop',95,68],['Idle',25,24],['Scrub',80,86],['Transit',40,45],['Vacuum',110,72],['Idle',20,22],['Scrub',65,82]],
+  vacuum:  [['Transit',30,40],['Vacuum',140,74],['Transit',35,46],['Dust',70,55],['Idle',30,22],['Vacuum',120,70],['Transit',25,44],['Idle',30,20]],
+  restroom:[['Transit',50,44],['Scrub',120,88],['Idle',20,24],['Mop',90,64],['Transit',40,46],['Scrub',100,84],['Idle',60,21]],
+  light:   [['Transit',60,40],['Dust',80,52],['Idle',90,20],['Vacuum',70,66],['Transit',40,44],['Mop',80,62],['Idle',60,22]],
+};
+
+const WORKERS = [
+  { id:'ar', initials:'AR', name:'Alex Reed',      color:'#4b41e1', zone:'North Wing · F1/F2', status:['ok','In progress'], coverage:94, trace:'mop',      narrative:'Completed all rostered tasks. 15-min delay in Floor 2 West due to high traffic; reprioritised lobby high-touch points and recovered by 12:45.', checks:['Lobby deep clean 07:15','Floor 2 lines sanitised by 11:45','Ad-hoc spill cleared 09:15'] },
+  { id:'sc', initials:'SC', name:'Sarah Chen',     color:'#7c83a0', zone:'Tech Suites · F4',   status:['neutral','Idle'],   coverage:88, trace:'vacuum',   narrative:'On track with the tech-suite vacuum circuit. Currently on a scheduled break since 13:10.', checks:['Suites 4A–4F vacuumed','Conference 4A reset','Break logged 13:10'] },
+  { id:'jm', initials:'JM', name:'James Miller',   color:'#c2603a', zone:'Floor 3 · Sector A', status:['bad','Exception'],  coverage:61, trace:'light',    narrative:'Below target on Floor 3. Restroom check at 11 AM was skipped — flagged for follow-up. Long idle stretch mid-shift.', checks:['Sector A swept','Restroom check skipped (flag)','45-min unplanned idle'] },
+  { id:'mj', initials:'MJ', name:'Marcus Johnson', color:'#0a7d57', zone:'Floor 2 · West',     status:['neutral','Idle'],   coverage:72, trace:'light',    narrative:'Partial coverage on Floor 2 West. Two short tasks ran under estimated time; idle since 12:50.', checks:['West corridor mopped','Breakroom partial','Idle since 12:50'] },
+  { id:'bk', initials:'BK', name:'Bina Kapoor',    color:'#8b5cf6', zone:'Lobby · F1',         status:['ok','In progress'], coverage:90, trace:'mop',      narrative:'Strong lobby coverage through peak arrival. Maintained high-touch sanitation on schedule.', checks:['Lobby mopped 08:40','High-touch wipe-down hourly','Entrance glass cleaned'] },
+  { id:'da', initials:'DA', name:'Diego Alvarez',  color:'#0891b2', zone:'Floor 5 · Offices',  status:['ok','Transit'],     coverage:83, trace:'vacuum',   narrative:'Steady progress across Floor 5 offices. In transit to the east wing for the afternoon block.', checks:['Offices 5A–5D vacuumed','Dusting complete','Heading to east wing'] },
+  { id:'ml', initials:'ML', name:'Mei Lin',        color:'#db2777', zone:'Floor 6 · Exec Wing',status:['ok','In progress'], coverage:97, trace:'restroom', narrative:'Excellent coverage of the executive wing. All priority zones completed ahead of schedule.', checks:['Exec restrooms deep-cleaned','Boardroom reset','Kitchenette sanitised'] },
+  { id:'to', initials:'TO', name:"Tom O'Brien",    color:'#b45309', zone:'Service · Basement', status:['bad','Exception'],  coverage:67, trace:'restroom', narrative:'Basement service areas partially covered. Biohazard alert in Restroom B handled within SLA; remaining loop incomplete.', checks:['Restroom B biohazard cleared','Service hall mopped','Loading bay incomplete (flag)'] },
 ];
 
-const tbody = document.querySelector('#roster tbody');
-TEAM.forEach((w) => {
-  const cls = w.coverage >= 85 ? 'fill-ok' : w.coverage >= 70 ? 'fill-warn' : 'fill-bad';
-  const tr = document.createElement('tr');
-  tr.style.cursor = 'pointer';
-  tr.onclick = () => location.href = 'worker.html';
-  tr.innerHTML = `
-    <td><div class="who-cell"><div class="avatar" style="background:${w.color}">${w.initials}</div> ${w.name}</div></td>
-    <td>${w.zone}</td>
-    <td><span class="chip ${w.status[0]}">● ${w.status[1]}</span></td>
-    <td><div class="who-cell"><div class="mini-track track"><span class="${cls}" style="width:${w.coverage}%"></span></div> ${w.coverage}%</div></td>
-    <td>${w.util}%</td>
-    <td>${w.flags ? `<span class="chip bad">${w.flags}</span>` : '<span class="muted">—</span>'}</td>`;
-  tbody.appendChild(tr);
+function fmt(min) {
+  const h = Math.floor(min/60), m = min%60;
+  return h ? (m ? `${h}h ${m}m` : `${h}h`) : `${m}m`;
+}
+
+// ---- build the left list ----
+const wlist = document.getElementById('wlist');
+WORKERS.forEach((w, i) => {
+  const cov = w.coverage >= 85 ? 'fill-ok' : w.coverage >= 70 ? 'fill-warn' : 'fill-bad';
+  const card = document.createElement('div');
+  card.className = 'wcard';
+  card.dataset.id = w.id;
+  card.innerHTML = `
+    <div class="top"><div class="avatar" style="background:${w.color}">${w.initials}</div>
+      <div><div class="nm">${w.name}</div><div class="muted" style="font-size:12px">${w.zone}</div></div></div>
+    <div class="sub">
+      <span class="chip ${w.status[0]}">● ${w.status[1]}</span>
+      <span class="mini-track track" style="flex:1"><span class="${cov}" style="width:${w.coverage}%"></span></span>
+      <span class="muted" style="font-weight:600">${w.coverage}%</span>
+    </div>`;
+  card.addEventListener('click', () => select(w.id));
+  wlist.appendChild(card);
 });
 
-const sorted = [...TEAM].sort((a,b)=>b.util-a.util);
-new Chart(document.getElementById('utilChart'), {
-  type: 'bar',
-  data: { labels: sorted.map(w=>w.name.split(' ')[0]),
-    datasets: [{ data: sorted.map(w=>w.util), backgroundColor:'#4b41e1', borderRadius:4 }] },
-  options: { indexAxis:'y', plugins:{legend:{display:false}},
-    scales:{ x:{beginAtZero:true,max:100,grid:{color:'#eef2f7'},ticks:{color:'#76777d'}}, y:{grid:{display:false},ticks:{color:'#45464d',font:{family:'Hanken Grotesk'}}} } }
-});
+// ---- render the detail for a worker ----
+function select(id) {
+  const w = WORKERS.find((x) => x.id === id);
+  if (!w) return;
+  document.querySelectorAll('.wcard').forEach((c) => c.classList.toggle('selected', c.dataset.id === id));
+
+  document.getElementById('dAvatar').textContent = w.initials;
+  document.getElementById('dAvatar').style.background = w.color;
+  document.getElementById('dName').textContent = w.name;
+  document.getElementById('dMeta').textContent = `08:00–16:00 · ${w.zone}`;
+
+  const trace = TRACES[w.trace];
+  let active = 0, transit = 0, idle = 0;
+  trace.forEach(([label, dur]) => {
+    if (label === 'Transit') transit += dur; else if (label === 'Idle') idle += dur; else active += dur;
+  });
+  document.getElementById('dActive').textContent = fmt(active);
+  document.getElementById('dTransit').textContent = fmt(transit);
+  document.getElementById('dIdle').textContent = fmt(idle);
+  document.getElementById('dCoverage').textContent = w.coverage + '%';
+
+  const bars = document.getElementById('traceBars');
+  const labels = document.getElementById('traceLabels');
+  bars.innerHTML = ''; labels.innerHTML = '';
+  trace.forEach(([label, dur, inten]) => {
+    const seg = document.createElement('div');
+    seg.className = 'seg' + (RECEDE.has(label) ? ' recede' : '');
+    seg.style.flexGrow = dur; seg.style.height = inten + '%'; seg.style.background = TASK_COLORS[label];
+    seg.title = `${label} · ${dur} min · intensity ${inten}`;
+    bars.appendChild(seg);
+    const lab = document.createElement('div');
+    lab.className = 'lab'; lab.style.flexGrow = dur;
+    lab.innerHTML = `${label}<small>${dur}m</small>`;
+    labels.appendChild(lab);
+  });
+
+  document.getElementById('dNarrative').textContent = w.narrative;
+  document.getElementById('dChecklist').innerHTML = w.checks
+    .map((c) => `<div class="check"><span class="ok">✔</span> <div>${c}</div></div>`).join('');
+}
+
+select(WORKERS[0].id);
 </script>
 </body>
 </html>

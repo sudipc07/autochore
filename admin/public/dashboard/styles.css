@@ -156,6 +156,18 @@ table.data tr:last-child td { border-bottom: none; }
 .legend .k { display: inline-flex; align-items: center; gap: 7px; }
 .legend .sw { width: 12px; height: 12px; border-radius: 3px; }
 
+/* ---- Team master-detail ---- */
+.team-grid { display: grid; grid-template-columns: 320px 1fr; gap: 20px; align-items: start; }
+.wlist { display: flex; flex-direction: column; gap: 10px; }
+.wcard { border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; background: var(--surface); cursor: pointer; transition: background .12s, border-color .12s, box-shadow .12s; }
+.wcard:hover { background: var(--surface-alt); }
+.wcard.selected { border-color: var(--navy); box-shadow: var(--shadow); }
+.wcard .top { display: flex; align-items: center; gap: 10px; }
+.wcard .nm { font-weight: 600; }
+.wcard .avatar { width: 34px; height: 34px; font-size: 12px; }
+.wcard .sub { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+@media (max-width: 900px) { .team-grid { grid-template-columns: 1fr; } }
+
 /* ---- Shift Trace ---- */
 .trace { padding-top: 4px; }
 .trace-pins { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 12px; }
