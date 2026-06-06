@@ -98,6 +98,12 @@ dl.meta dd { margin: 2px 0 0; }
   background: var(--accent); color: #fff; border: none; text-decoration: none;
   padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 14px;
 }
+.btn-warn { background: #c2603a; }
+.btn-muted { background: var(--line); color: var(--text); }
+.archive-form { display: inline; }
+.archive-link { margin: -6px 0 16px; }
+.archive-link a { color: var(--accent); text-decoration: none; font-size: 13px; }
+.archived-note { color: #e0a93b; font-size: 13px; margin: 8px 0 0; }
 
 canvas { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px; }
 

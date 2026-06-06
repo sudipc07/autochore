@@ -30,14 +30,29 @@ async function restGet(path, query) {
 const LIST_COLUMNS =
   'id,user_id,chore_label,start_time,end_time,sample_count,floor_summary,notes,created_at';
 
-async function listSessions({ chore, user } = {}) {
+async function listSessions({ chore, user, archived = false } = {}) {
   const query = {
     select: LIST_COLUMNS,
     order: 'start_time.desc',
+    archived: archived ? 'is.true' : 'is.false',
   };
   if (chore) query.chore_label = `eq.${chore}`;
   if (user) query.user_id = `eq.${user}`;
   return restGet('sessions', query);
+}
+
+async function setArchived(id, archived) {
+  const res = await fetch(restURL('sessions', { id: `eq.${id}` }), {
+    method: 'PATCH',
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=minimal',
+    },
+    body: JSON.stringify({ archived }),
+  });
+  if (!res.ok) throw new Error(`archive ${res.status}: ${await res.text()}`);
 }
 
 async function getSession(id) {
@@ -66,7 +81,7 @@ async function getSession(id) {
 
 // Distinct chore/user values for the filter dropdowns.
 async function listFacets() {
-  const rows = await restGet('sessions', { select: 'chore_label,user_id' });
+  const rows = await restGet('sessions', { select: 'chore_label,user_id', archived: 'is.false' });
   const chores = [...new Set(rows.map((r) => r.chore_label).filter(Boolean))].sort();
   const users = [...new Set(rows.map((r) => r.user_id).filter(Boolean))].sort();
   return { chores, users };
@@ -74,7 +89,11 @@ async function listFacets() {
 
 // Lightweight metadata for every session (no heavy sample arrays).
 async function listSessionsMeta() {
-  return restGet('sessions', { select: 'id,chore_label,samples_path', order: 'created_at.desc' });
+  return restGet('sessions', {
+    select: 'id,chore_label,samples_path',
+    order: 'created_at.desc',
+    archived: 'is.false',
+  });
 }
 
 async function listDevices() {
@@ -83,7 +102,7 @@ async function listDevices() {
 
 // Count sessions per user_id so the Devices view can show activity.
 async function sessionCountsByUser() {
-  const rows = await restGet('sessions', { select: 'user_id' });
+  const rows = await restGet('sessions', { select: 'user_id', archived: 'is.false' });
   const counts = {};
   for (const r of rows) counts[r.user_id] = (counts[r.user_id] || 0) + 1;
   return counts;
@@ -96,4 +115,5 @@ module.exports = {
   listDevices,
   sessionCountsByUser,
   listSessionsMeta,
+  setArchived,
 };

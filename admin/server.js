@@ -25,6 +25,7 @@ const {
   listDevices,
   sessionCountsByUser,
   listSessionsMeta,
+  setArchived,
 } = require('./supabase');
 const { motionSamplesToCSV } = require('./csv');
 const { analyzeMotion, motionFeatures, choreSummary } = require('./analysis');
@@ -106,13 +107,14 @@ app.post('/logout', (req, res) => {
 // --- Pages ---
 app.get('/', requireAuth, async (req, res, next) => {
   try {
-    const selected = { chore: req.query.chore || '', user: req.query.user || '' };
+    const showArchived = req.query.show === 'archived';
+    const selected = { chore: req.query.chore || '', user: req.query.user || '', archived: showArchived };
     const [sessions, facets, summary] = await Promise.all([
       listSessions(selected),
       listFacets(),
-      computeChoreSummary(),
+      showArchived ? Promise.resolve(null) : computeChoreSummary(),
     ]);
-    res.send(listPage(sessions, facets, selected, summary));
+    res.send(listPage(sessions, facets, selected, summary, showArchived));
   } catch (err) {
     next(err);
   }
@@ -122,6 +124,16 @@ app.get('/devices', requireAuth, async (req, res, next) => {
   try {
     const [devices, counts] = await Promise.all([listDevices(), sessionCountsByUser()]);
     res.send(devicesPage(devices, counts));
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post('/session/:id/archive', requireAuth, async (req, res, next) => {
+  try {
+    const archive = req.body.archived !== 'false';
+    await setArchived(req.params.id, archive);
+    res.redirect(archive ? '/' : `/session/${req.params.id}`);
   } catch (err) {
     next(err);
   }

@@ -98,7 +98,7 @@ function summarySection(summary) {
   </section>`;
 }
 
-function listPage(sessions, facets, selected, summary) {
+function listPage(sessions, facets, selected, summary, showArchived) {
   const choreOpts = facets.chores
     .map((c) => `<option value="${esc(c)}"${c === selected.chore ? ' selected' : ''}>${esc(c)}</option>`)
     .join('');
@@ -122,8 +122,13 @@ function listPage(sessions, facets, selected, summary) {
     .join('');
 
   const body = `
-  ${summarySection(summary)}
-  <h1>Sessions <span class="count">${sessions.length}</span></h1>
+  ${showArchived ? '' : summarySection(summary)}
+  <h1>${showArchived ? 'Archived sessions' : 'Sessions'} <span class="count">${sessions.length}</span></h1>
+  <p class="archive-link">${
+    showArchived
+      ? '<a href="/">← Back to active sessions</a>'
+      : '<a href="/?show=archived">View archived sessions →</a>'
+  }</p>
   <form class="filters" method="get" action="/">
     <select name="chore" onchange="this.form.submit()">
       <option value="">All chores</option>${choreOpts}
@@ -174,7 +179,14 @@ function detailPage(session, analysis) {
   <div class="actions">
     <a class="btn" href="/api/sessions/${esc(session.id)}/csv">Download CSV</a>
     <button class="btn" id="copyJson">Copy JSON</button>
+    <form method="post" action="/session/${esc(session.id)}/archive" class="archive-form">
+      <input type="hidden" name="archived" value="${session.archived ? 'false' : 'true'}">
+      <button type="submit" class="btn ${session.archived ? 'btn-muted' : 'btn-warn'}">
+        ${session.archived ? 'Unarchive' : 'Archive'}
+      </button>
+    </form>
   </div>
+  ${session.archived ? '<p class="archived-note">This session is archived (hidden from the main list and analysis).</p>' : ''}
 
   <h2>Accelerometer (g) — X / Y / Z</h2>
   <canvas id="accelChart" height="120"></canvas>
