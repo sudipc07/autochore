@@ -235,15 +235,16 @@ canvas { max-width: 100%; }
   .sidebar {
     position: fixed; left: 0; right: 0; bottom: 0; top: auto;
     width: auto; height: auto; flex-direction: row; padding: 6px 6px;
-    background: #fff; border-top: 1px solid var(--border);
-    box-shadow: 0 -2px 10px rgba(0,0,0,.05); z-index: 60;
+    background: var(--navy); border-top: 1px solid #2a3450;
+    box-shadow: 0 -3px 14px rgba(0,0,0,.2); z-index: 60;
   }
   .brand { display: none; }
   .nav { flex-direction: row; justify-content: space-around; width: 100%; gap: 0; }
-  .nav a { flex-direction: column; align-items: center; gap: 3px; padding: 6px 8px; font-size: 10px; color: var(--faint); }
+  .nav a { flex-direction: column; align-items: center; gap: 3px; padding: 6px 8px; font-size: 10px; color: #8b93a7; }
   .nav a .ico { width: 22px; height: 22px; }
-  .nav a:hover { background: transparent; color: var(--text); }
-  .nav a.active { background: transparent; color: var(--indigo); }
+  .nav a:hover { background: transparent; color: #fff; }
+  .nav a.active { background: transparent; color: #fff; }
+  .nav a.active .ico { color: #8b8fff; }
 
   /* Top bar: keep building name + bell + avatar; drop search and the name block */
   .topbar { padding: 12px 16px; position: sticky; }
