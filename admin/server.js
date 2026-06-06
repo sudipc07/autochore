@@ -39,9 +39,11 @@ async function getFeatures(id) {
   featCache.set(id, f);
   return f;
 }
-// Below this effective sample rate, the stroke-frequency estimate is unreliable
-// (aliasing), so those sessions are excluded from the signature comparison.
+// Reliability gates for the stroke-rhythm estimate:
+//  - below this rate, low-freq strokes alias
+//  - below this duration, there aren't enough stroke cycles to measure
 const MIN_RELIABLE_HZ = 25;
+const MIN_RELIABLE_SEC = 10;
 
 async function computeChoreSummary() {
   const meta = await listSessionsMeta();
@@ -49,7 +51,7 @@ async function computeChoreSummary() {
   let excluded = 0;
   for (const r of meta) {
     const f = await getFeatures(r.id);
-    if (f && f.fs >= MIN_RELIABLE_HZ) {
+    if (f && f.fs >= MIN_RELIABLE_HZ && f.durationSec >= MIN_RELIABLE_SEC) {
       items.push({ chore: r.chore_label, features: f });
     } else if (f) {
       excluded++;
