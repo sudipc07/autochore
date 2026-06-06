@@ -226,3 +226,48 @@ table.data tr:last-child td { border-bottom: none; }
 .mt { margin-top: 20px; }
 .muted { color: var(--faint); }
 canvas { max-width: 100%; }
+
+/* ============ MOBILE ============ */
+@media (max-width: 768px) {
+  .app { flex-direction: column; }
+
+  /* Sidebar becomes a fixed bottom tab bar (white, like the mobile mockups) */
+  .sidebar {
+    position: fixed; left: 0; right: 0; bottom: 0; top: auto;
+    width: auto; height: auto; flex-direction: row; padding: 6px 6px;
+    background: #fff; border-top: 1px solid var(--border);
+    box-shadow: 0 -2px 10px rgba(0,0,0,.05); z-index: 60;
+  }
+  .brand { display: none; }
+  .nav { flex-direction: row; justify-content: space-around; width: 100%; gap: 0; }
+  .nav a { flex-direction: column; align-items: center; gap: 3px; padding: 6px 8px; font-size: 10px; color: var(--faint); }
+  .nav a .ico { width: 22px; height: 22px; }
+  .nav a:hover { background: transparent; color: var(--text); }
+  .nav a.active { background: transparent; color: var(--indigo); }
+
+  /* Top bar: keep building name + bell + avatar; drop search and the name block */
+  .topbar { padding: 12px 16px; position: sticky; }
+  .topbar .search { display: none; }
+  .topbar .user .who { display: none; }
+  .crumbs { font-size: 13px; }
+
+  /* Main content clears the bottom bar */
+  .main { padding-bottom: 76px; }
+  .content { padding: 18px 16px 24px; }
+  .page-title { font-size: 24px; }
+
+  /* Grids stack; KPIs go 2-up */
+  .kpis { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .cols-2-1, .cols-1-1 { grid-template-columns: 1fr; }
+  .kpi { padding: 16px; }
+  .kpi .value { font-size: 26px; }
+
+  .card.pad { padding: 18px; }
+  /* Let wide tables scroll horizontally instead of breaking the layout */
+  .card.pad { overflow-x: auto; }
+  table.data { min-width: 460px; }
+
+  /* Coverage floor plan: a touch shorter so it fits */
+  .floorplan { grid-template-rows: repeat(4, 56px); font-size: 11px; }
+  .floor-tabs { flex-wrap: wrap; }
+}
