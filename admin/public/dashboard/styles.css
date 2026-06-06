@@ -158,6 +158,25 @@ table.data tr:last-child td { border-bottom: none; }
 .legend .k { display: inline-flex; align-items: center; gap: 7px; }
 .legend .sw { width: 12px; height: 12px; border-radius: 3px; }
 
+/* ---- Shift Trace ---- */
+.trace { padding-top: 4px; }
+.trace-pins { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 12px; }
+.trace-pins .pin { display: inline-flex; align-items: center; gap: 7px; }
+.trace-pins .pin i { width: 9px; height: 9px; border-radius: 50%; background: var(--indigo); box-shadow: 0 0 0 3px var(--indigo-50); display: inline-block; }
+.trace-bars { display: flex; align-items: flex-end; gap: 4px; height: 170px; border-bottom: 2px solid var(--border); }
+.trace-bars .seg { flex-basis: 0; min-width: 3px; border-radius: 6px 6px 0 0; transition: filter .15s; }
+.trace-bars .seg:hover { filter: brightness(1.08); }
+.trace-bars .seg.recede { opacity: .75; }
+.trace-labels { display: flex; gap: 4px; margin-top: 8px; }
+.trace-labels .lab { flex-basis: 0; min-width: 0; text-align: center; font-size: 11px; font-weight: 600; color: var(--muted); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.trace-labels .lab small { display: block; color: var(--faint); font-weight: 500; font-size: 10px; }
+.trace-axis { display: flex; justify-content: space-between; font-size: 11px; color: var(--faint); margin-top: 14px; border-top: 1px dashed var(--border); padding-top: 7px; }
+@media (max-width: 640px) {
+  .trace-bars { height: 120px; }
+  .trace-labels .lab small { display: none; }
+  .trace-labels .lab { font-size: 10px; }
+}
+
 .stat { text-align: left; }
 .stat .label { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--faint); font-weight: 600; }
 .stat .value { font-size: 26px; font-weight: 700; margin-top: 4px; }

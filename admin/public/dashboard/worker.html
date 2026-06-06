@@ -30,34 +30,24 @@
     <div class="content">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
         <div class="who-cell"><div class="avatar" style="width:46px;height:46px;font-size:16px">AR</div>
-          <div><h1 class="page-title" style="margin:0">Alex Reed</h1><p class="muted" style="margin:2px 0 0">06:00–14:00 · Lobby, Floors 1–2</p></div>
+          <div><h1 class="page-title" style="margin:0">Alex Reed</h1><p class="muted" style="margin:2px 0 0">08:00–16:00 · Lobby, Floors 1–2</p></div>
         </div>
         <div class="row-actions"><button class="btn ghost">Export Log</button><button class="btn primary">Message Worker</button></div>
       </div>
 
       <div class="card pad mt">
-        <div class="section-title">Shift Activity Timeline</div>
+        <div class="section-title">Shift Trace</div>
         <div class="section-sub">Reconstructed from CHARM™ Band sensor data</div>
-        <div class="timeline-wrap">
-          <div class="timeline-axis"><span>06:00</span><span>08:00</span><span>10:00</span><span>12:00</span><span>14:00</span></div>
-          <div class="timeline">
-            <span style="width:14%;background:#4b41e1" title="Vacuuming"></span>
-            <span style="width:6%;background:var(--transit)" title="Transit"></span>
-            <span style="width:22%;background:#10b981" title="Mopping"></span>
-            <span style="width:5%;background:var(--idle)" title="Idle"></span>
-            <span style="width:16%;background:#8b5cf6" title="Waste removal"></span>
-            <span style="width:7%;background:var(--transit)" title="Transit"></span>
-            <span style="width:18%;background:#4b41e1" title="Vacuuming"></span>
-            <span style="width:6%;background:var(--idle)" title="Idle"></span>
-            <span style="width:6%;background:var(--transit)" title="Transit"></span>
+        <div class="trace">
+          <div class="trace-pins">
+            <span class="pin"><i></i> Pair · 08:00</span>
+            <span class="pin right">Return · 16:00 <i></i></span>
           </div>
-          <div class="legend">
-            <span class="k"><span class="sw" style="background:#4b41e1"></span> Vacuuming</span>
-            <span class="k"><span class="sw" style="background:#10b981"></span> Mopping</span>
-            <span class="k"><span class="sw" style="background:#8b5cf6"></span> Waste removal</span>
-            <span class="k"><span class="sw" style="background:var(--transit)"></span> Transit</span>
-            <span class="k"><span class="sw" style="background:var(--idle)"></span> Idle</span>
-          </div>
+          <div class="trace-bars" id="traceBars"></div>
+          <div class="trace-labels" id="traceLabels"></div>
+          <div class="trace-axis"><span>08:00</span><span>10:00</span><span>12:00</span><span>14:00</span><span>16:00</span></div>
+          <div class="legend" id="traceLegend"></div>
+          <p class="muted" style="font-size:12px;margin-top:14px">Eight-hour shift shown. Width shows duration. Height shows activity intensity.</p>
         </div>
       </div>
 
@@ -91,5 +81,48 @@
     </div>
   </div>
 </div>
+
+<script>
+// Shift Trace — width = duration, height = intensity. Total must be 480 min.
+const TRACE = [
+  { label: "Transit", duration: 45,  intensity: 42 },
+  { label: "Mop",     duration: 95,  intensity: 68 },
+  { label: "Idle",    duration: 25,  intensity: 24 },
+  { label: "Scrub",   duration: 80,  intensity: 86 },
+  { label: "Transit", duration: 40,  intensity: 45 },
+  { label: "Vacuum",  duration: 110, intensity: 72 },
+  { label: "Idle",    duration: 20,  intensity: 22 },
+  { label: "Scrub",   duration: 65,  intensity: 82 },
+];
+const COLORS = {
+  Mop: '#10b981', Scrub: '#4b41e1', Vacuum: '#8b5cf6',
+  Transit: '#94a3b8', Idle: '#cbd5e1',
+};
+const RECEDE = new Set(['Transit', 'Idle']);
+
+const bars = document.getElementById('traceBars');
+const labels = document.getElementById('traceLabels');
+TRACE.forEach((s) => {
+  const seg = document.createElement('div');
+  seg.className = 'seg';
+  seg.style.flexGrow = s.duration;
+  seg.style.height = s.intensity + '%';
+  seg.style.background = COLORS[s.label] || '#999';
+  if (RECEDE.has(s.label)) seg.classList.add('recede');
+  seg.title = `${s.label} · ${s.duration} min · intensity ${s.intensity}`;
+  bars.appendChild(seg);
+
+  const lab = document.createElement('div');
+  lab.className = 'lab';
+  lab.style.flexGrow = s.duration;
+  lab.innerHTML = `${s.label}<small>${s.duration}m</small>`;
+  labels.appendChild(lab);
+});
+
+const seen = [...new Set(TRACE.map((s) => s.label))];
+document.getElementById('traceLegend').innerHTML = seen
+  .map((l) => `<span class="k"><span class="sw" style="background:${COLORS[l]}"></span> ${l}</span>`)
+  .join('');
+</script>
 </body>
 </html>
