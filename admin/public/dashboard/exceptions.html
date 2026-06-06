@@ -23,7 +23,7 @@
     <div class="topbar">
       <div class="crumbs"><b>Metropolitan Plaza</b> › Exceptions &amp; Performance</div>
       <div class="search"><input placeholder="Search exceptions…"></div>
-      <div class="right"><span class="muted">📅 ⏱ 🔔</span><div class="user"><div class="who"><b>Daniel Pike</b><span>Facility Manager</span></div><div class="avatar">DP</div></div></div>
+      <div class="right"><span class="muted">📅 ⏱ 🔔</span><div class="user" id="userMenu"><div class="who"><b>Daniel Pike</b><span>Facility Manager</span></div><div class="avatar">DP</div><div class="user-pop"><b>Daniel Pike</b><span>Facility Manager</span></div></div></div>
     </div>
 
     <div class="content">
@@ -123,5 +123,6 @@ new Chart(document.getElementById('byfloor'), {
   options: { indexAxis:'y', plugins:{legend:{display:false}}, scales:{ x:{grid,ticks:tick,beginAtZero:true}, y:{grid:{display:false},ticks:tick} } }
 });
 </script>
+<script src="app.js"></script>
 </body>
 </html>
