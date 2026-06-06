@@ -42,12 +42,32 @@
       <div class="card pad mt">
         <div style="display:flex;justify-content:space-between;align-items:center"><div class="section-title" style="margin:0">Priority Exceptions</div></div>
         <div class="filters">
-          <span class="pill active">All floors</span><span class="pill">All workers</span><span class="pill">All severities</span>
+          <select class="filter-select" id="fFloor">
+            <option value="all">All floors</option>
+            <option value="F1">Floor 1</option>
+            <option value="F2">Floor 2</option>
+            <option value="F4">Floor 4</option>
+          </select>
+          <select class="filter-select" id="fWorker">
+            <option value="all">All workers</option>
+            <option value="Marcus J.">Marcus J.</option>
+            <option value="Bina K.">Bina K.</option>
+            <option value="Unassigned">Unassigned</option>
+          </select>
+          <select class="filter-select" id="fSev">
+            <option value="all">All severities</option>
+            <option value="high">High</option>
+            <option value="med">Medium</option>
+            <option value="low">Low</option>
+          </select>
         </div>
-        <div class="exc high"><span class="dot">🔴</span><div class="body"><div class="ttl">Unplanned idle time — 46m · Marcus J.</div><div class="meta">Floor 2B · detected 13:08 · status pending</div></div><span class="chip bad">High</span></div>
-        <div class="exc med"><span class="dot">🟠</span><div class="body"><div class="ttl">Missed Area: Floor 4 Service Hall</div><div class="meta">Scheduled 09:00 AM · status pending</div></div><span class="chip warn">Medium</span></div>
-        <div class="exc low"><span class="dot">🔵</span><div class="body"><div class="ttl">Rushed Route: Lobby West</div><div class="meta">Worker Bina K. · duration 12m (Est. 25m)</div></div><span class="chip neutral">Low</span></div>
-        <div class="exc med"><span class="dot">🟠</span><div class="body"><div class="ttl">Biohazard Alert: Floor 2 Restroom B</div><div class="meta">Senior triggered · priority resolution required · resolved within SLA</div></div><span class="chip warn">Medium</span></div>
+        <div id="excList">
+          <div class="exc high" data-floor="F2" data-worker="Marcus J." data-sev="high"><span class="dot">🔴</span><div class="body"><div class="ttl">Unplanned idle time — 46m · Marcus J.</div><div class="meta">Floor 2B · detected 13:08 · status pending</div></div><span class="chip bad">High</span></div>
+          <div class="exc med" data-floor="F4" data-worker="Unassigned" data-sev="med"><span class="dot">🟠</span><div class="body"><div class="ttl">Missed Area: Floor 4 Service Hall</div><div class="meta">Scheduled 09:00 AM · status pending</div></div><span class="chip warn">Medium</span></div>
+          <div class="exc low" data-floor="F1" data-worker="Bina K." data-sev="low"><span class="dot">🔵</span><div class="body"><div class="ttl">Rushed Route: Lobby West</div><div class="meta">Worker Bina K. · duration 12m (Est. 25m)</div></div><span class="chip neutral">Low</span></div>
+          <div class="exc med" data-floor="F2" data-worker="Unassigned" data-sev="med"><span class="dot">🟠</span><div class="body"><div class="ttl">Biohazard Alert: Floor 2 Restroom B</div><div class="meta">Senior triggered · priority resolution required · resolved within SLA</div></div><span class="chip warn">Medium</span></div>
+          <p id="excEmpty" class="muted" style="display:none;padding:8px 2px">No exceptions match these filters.</p>
+        </div>
         <a class="act" style="color:var(--indigo);font-weight:600;font-size:13px">View all operational history →</a>
       </div>
 
@@ -68,6 +88,28 @@
 </div>
 
 <script>
+// Priority Exceptions filtering
+(function () {
+  const fFloor = document.getElementById('fFloor');
+  const fWorker = document.getElementById('fWorker');
+  const fSev = document.getElementById('fSev');
+  const rows = [...document.querySelectorAll('#excList .exc')];
+  const empty = document.getElementById('excEmpty');
+  function apply() {
+    let shown = 0;
+    rows.forEach((el) => {
+      const ok =
+        (fFloor.value === 'all' || el.dataset.floor === fFloor.value) &&
+        (fWorker.value === 'all' || el.dataset.worker === fWorker.value) &&
+        (fSev.value === 'all' || el.dataset.sev === fSev.value);
+      el.style.display = ok ? '' : 'none';
+      if (ok) shown++;
+    });
+    empty.style.display = shown ? 'none' : 'block';
+  }
+  [fFloor, fWorker, fSev].forEach((s) => s.addEventListener('change', apply));
+})();
+
 const grid = { color: '#eef2f7' };
 const tick = { color: '#76777d', font: { family: 'Hanken Grotesk' } };
 new Chart(document.getElementById('continuity'), {
