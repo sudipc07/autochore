@@ -79,6 +79,9 @@ app.use(
 );
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Exec dashboard (static, public for now — mock data for the pitch).
+app.get('/dashboard', (req, res) => res.redirect('/dashboard/'));
+
 function requireAuth(req, res, next) {
   if (req.session && req.session.authed) return next();
   if (req.path.startsWith('/api/')) return res.status(401).json({ error: 'unauthorized' });

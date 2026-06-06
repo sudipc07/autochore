@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CHARM Band — Worker Shift Timeline</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand"><div class="mark">C</div><div><div class="name">CHARM</div><small>Facility Operations</small></div></div>
+    <nav class="nav">
+      <a href="index.html"><span class="ico">▦</span> Overview</a>
+      <a class="active" href="worker.html"><span class="ico">◷</span> Team</a>
+      <a href="coverage.html"><span class="ico">▢</span> Maps</a>
+      <a href="exceptions.html"><span class="ico">⚑</span> Reports</a>
+    </nav>
+    <div class="spacer"></div>
+    <button class="newbtn">+ New Report</button>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="crumbs"><b>Metropolitan Plaza</b> › Team › Worker Profile</div>
+      <div class="search"><input placeholder="Search team…"></div>
+      <div class="right"><span class="muted">📅 ⏱ 🔔</span><div class="user"><div class="who"><b>Executive Suite</b><span>Facility Manager</span></div><div class="avatar">ES</div></div></div>
+    </div>
+
+    <div class="content">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+        <div class="who-cell"><div class="avatar" style="width:46px;height:46px;font-size:16px">AR</div>
+          <div><h1 class="page-title" style="margin:0">Alex Reed</h1><p class="muted" style="margin:2px 0 0">06:00–14:00 · Lobby, Floors 1–2</p></div>
+        </div>
+        <div class="row-actions"><button class="btn ghost">Export Log</button><button class="btn primary">Message Worker</button></div>
+      </div>
+
+      <div class="card pad mt">
+        <div class="section-title">Shift Activity Timeline</div>
+        <div class="section-sub">Reconstructed from CHARM Band sensor data</div>
+        <div class="timeline-wrap">
+          <div class="timeline-axis"><span>06:00</span><span>08:00</span><span>10:00</span><span>12:00</span><span>14:00</span></div>
+          <div class="timeline">
+            <span style="width:14%;background:#4b41e1" title="Vacuuming"></span>
+            <span style="width:6%;background:var(--transit)" title="Transit"></span>
+            <span style="width:22%;background:#10b981" title="Mopping"></span>
+            <span style="width:5%;background:var(--idle)" title="Idle"></span>
+            <span style="width:16%;background:#8b5cf6" title="Waste removal"></span>
+            <span style="width:7%;background:var(--transit)" title="Transit"></span>
+            <span style="width:18%;background:#4b41e1" title="Vacuuming"></span>
+            <span style="width:6%;background:var(--idle)" title="Idle"></span>
+            <span style="width:6%;background:var(--transit)" title="Transit"></span>
+          </div>
+          <div class="legend">
+            <span class="k"><span class="sw" style="background:#4b41e1"></span> Vacuuming</span>
+            <span class="k"><span class="sw" style="background:#10b981"></span> Mopping</span>
+            <span class="k"><span class="sw" style="background:#8b5cf6"></span> Waste removal</span>
+            <span class="k"><span class="sw" style="background:var(--transit)"></span> Transit</span>
+            <span class="k"><span class="sw" style="background:var(--idle)"></span> Idle</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid kpis mt">
+        <div class="card pad stat"><div class="label">Active work</div><div class="value">6h 15m</div></div>
+        <div class="card pad stat"><div class="label">Transit time</div><div class="value">45m</div></div>
+        <div class="card pad stat"><div class="label">Idle time</div><div class="value">1h</div></div>
+        <div class="card pad stat"><div class="label">Zone coverage</div><div class="value">98%</div></div>
+      </div>
+
+      <div class="grid cols-2-1 mt">
+        <div class="card pad">
+          <div class="section-title">Vs Assignment Performance</div>
+          <div class="section-sub">Did the shift match the roster?</div>
+          <div class="narrative" style="font-size:15px"><div class="tag">✦ AI Summary</div>Completed all rostered tasks. 15-minute delay in Floor 2 West wing due to high-traffic re-routing; adapted priority to focus on lobby high-touch points during peak, and returned to Floor 2 at 12:45. Efficiency remained well within target benchmarks.</div>
+          <div class="mt">
+            <div class="check"><span class="ok">✔</span> <div><b>Lobby Reception</b> — deep clean completed 07:15, spot-checks passed.</div></div>
+            <div class="check"><span class="ok">✔</span> <div><b>Floor 2 West Wing</b> — all floor 1 &amp; 2 lines cleaned and sanitised by 11:45.</div></div>
+            <div class="check"><span class="ok">✔</span> <div><b>Waste Consolidated</b> — ad-hoc task completed 09:15 following spill report.</div></div>
+          </div>
+        </div>
+        <div class="card pad">
+          <div class="section-title">Zone Interaction</div>
+          <div class="section-sub">Where time was spent</div>
+          <div class="floorbar"><div class="row"><span>Main Lobby</span><span class="pct">2h 10m</span></div><div class="track"><span class="fill-ok" style="width:90%"></span></div></div>
+          <div class="floorbar"><div class="row"><span>Floor 1 Corridors</span><span class="pct">1h 40m</span></div><div class="track"><span class="fill-ok" style="width:70%"></span></div></div>
+          <div class="floorbar"><div class="row"><span>Floor 2 West</span><span class="pct">1h 25m</span></div><div class="track"><span class="fill-ok" style="width:58%"></span></div></div>
+          <div class="floorbar"><div class="row"><span>Restroom F1</span><span class="pct">40m</span></div><div class="track"><span class="fill-ok" style="width:28%"></span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

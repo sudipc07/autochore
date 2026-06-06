@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CHARM Band — Exceptions &amp; Daily Summary</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand"><div class="mark">C</div><div><div class="name">CHARM</div><small>Facility Operations</small></div></div>
+    <nav class="nav">
+      <a href="index.html"><span class="ico">▦</span> Overview</a>
+      <a href="worker.html"><span class="ico">◷</span> Team</a>
+      <a href="coverage.html"><span class="ico">▢</span> Maps</a>
+      <a class="active" href="exceptions.html"><span class="ico">⚑</span> Reports</a>
+    </nav>
+    <div class="spacer"></div>
+    <button class="newbtn">+ New Report</button>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="crumbs"><b>Metropolitan Plaza</b> › Exceptions &amp; Performance</div>
+      <div class="search"><input placeholder="Search exceptions…"></div>
+      <div class="right"><span class="muted">📅 ⏱ 🔔</span><div class="user"><div class="who"><b>Executive Suite</b><span>Facility Manager</span></div><div class="avatar">ES</div></div></div>
+    </div>
+
+    <div class="content">
+      <div class="narrative">
+        <div class="tag">✦ Daily Executive Summary</div>
+        Today's coverage reached <b>92%</b>, slightly above average. Key exceptions were located in Floor 3 restrooms, which were skipped during the 11 AM roster. Team utilisation remains high at <b>84%</b>. No critical sanitation gaps detected; one biohazard alert in Restroom B was resolved within SLA.
+      </div>
+
+      <div class="grid kpis mt">
+        <div class="kpi"><div class="label">Total exceptions</div><div class="value">12</div></div>
+        <div class="kpi"><div class="label">Team utilisation</div><div class="value">84%</div></div>
+        <div class="kpi"><div class="label">Active floor coverage</div><div class="value">92%</div><div class="delta up">Stable</div></div>
+        <div class="kpi alert"><div class="label">Critical misses</div><div class="value">3</div><div class="delta" style="color:var(--error)">Floor 3 &amp; 1</div></div>
+      </div>
+
+      <div class="card pad mt">
+        <div style="display:flex;justify-content:space-between;align-items:center"><div class="section-title" style="margin:0">Priority Exceptions</div></div>
+        <div class="filters">
+          <span class="pill active">All floors</span><span class="pill">All workers</span><span class="pill">All severities</span>
+        </div>
+        <div class="exc high"><span class="dot">🔴</span><div class="body"><div class="ttl">Unplanned idle time — 46m · Marcus J.</div><div class="meta">Floor 2B · detected 13:08 · status pending</div></div><span class="chip bad">High</span></div>
+        <div class="exc med"><span class="dot">🟠</span><div class="body"><div class="ttl">Missed Area: Floor 4 Service Hall</div><div class="meta">Scheduled 09:00 AM · status pending</div></div><span class="chip warn">Medium</span></div>
+        <div class="exc low"><span class="dot">🔵</span><div class="body"><div class="ttl">Rushed Route: Lobby West</div><div class="meta">Worker Bina K. · duration 12m (Est. 25m)</div></div><span class="chip neutral">Low</span></div>
+        <div class="exc med"><span class="dot">🟠</span><div class="body"><div class="ttl">Biohazard Alert: Floor 2 Restroom B</div><div class="meta">Senior triggered · priority resolution required · resolved within SLA</div></div><span class="chip warn">Medium</span></div>
+        <a class="act" style="color:var(--indigo);font-weight:600;font-size:13px">View all operational history →</a>
+      </div>
+
+      <div class="grid cols-1-1 mt">
+        <div class="card pad">
+          <div class="section-title">Service Continuity</div>
+          <div class="section-sub">Tasks completed per hour, this shift</div>
+          <canvas id="continuity" height="150"></canvas>
+        </div>
+        <div class="card pad">
+          <div class="section-title">Exceptions by Floor</div>
+          <div class="section-sub">Where attention is needed</div>
+          <canvas id="byfloor" height="150"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const grid = { color: '#eef2f7' };
+const tick = { color: '#76777d', font: { family: 'Hanken Grotesk' } };
+new Chart(document.getElementById('continuity'), {
+  type: 'bar',
+  data: { labels: ['08:00','09:00','10:00','11:00','12:00','13:00','14:00'],
+    datasets: [{ data: [6,9,11,7,4,10,8], backgroundColor: (c)=> c.dataIndex===4 ? '#ef4444' : '#4b41e1', borderRadius: 4 }] },
+  options: { plugins:{legend:{display:false}}, scales:{ x:{grid:{display:false},ticks:tick}, y:{grid,ticks:tick,beginAtZero:true} } }
+});
+new Chart(document.getElementById('byfloor'), {
+  type: 'bar',
+  data: { labels: ['F1','F2','F3','F4','F5','F6'],
+    datasets: [{ data: [1,2,5,3,1,0], backgroundColor:'#f59e0b', borderRadius: 4 }] },
+  options: { indexAxis:'y', plugins:{legend:{display:false}}, scales:{ x:{grid,ticks:tick,beginAtZero:true}, y:{grid:{display:false},ticks:tick} } }
+});
+</script>
+</body>
+</html>
