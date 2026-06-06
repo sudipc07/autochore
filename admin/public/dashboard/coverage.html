@@ -83,17 +83,33 @@ const ZONES = {
   'restroom-e': { name: 'Restroom East', chip: ['ok','Covered'], sub: 'Public Area · High Priority', cleaned: '10:45 AM · by Sarah Chen', task: 'Restroom Cleaning', dur: '22m' },
 };
 
-function closeDetail() { document.getElementById('detailPane').classList.remove('open'); }
+const isMobile = () => window.matchMedia('(max-width: 768px)').matches;
+function openSheet() {
+  const p = document.getElementById('detailPane');
+  if (p.classList.contains('open')) return;
+  p.classList.add('open');
+  p.scrollTop = 0;
+  history.pushState({ sheet: true }, '');   // so back-gesture/back-button closes the sheet, not the page
+}
+function closeDetail() {
+  if (document.getElementById('detailPane').classList.contains('open')) history.back();
+}
+window.addEventListener('popstate', () => {
+  const p = document.getElementById('detailPane');
+  if (p && p.classList.contains('open')) p.classList.remove('open');
+});
+(function () {  // swipe right on the pane to close
+  const p = document.getElementById('detailPane');
+  let sx = 0;
+  p.addEventListener('touchstart', (e) => { sx = e.touches[0].clientX; }, { passive: true });
+  p.addEventListener('touchend', (e) => { if (e.changedTouches[0].clientX - sx > 80) closeDetail(); }, { passive: true });
+})();
 
 function selectZone(id, open) {
   const z = ZONES[id];
   if (!z) return;
   document.querySelectorAll('.zone').forEach((el) => el.classList.toggle('selected', el.dataset.zone === id));
-  if (open && window.matchMedia('(max-width: 768px)').matches) {
-    const p = document.getElementById('detailPane');
-    p.classList.add('open');
-    p.scrollTop = 0;
-  }
+  if (open && isMobile()) openSheet();
   document.getElementById('zd-name').textContent = z.name;
   const chip = document.getElementById('zd-chip');
   chip.className = 'chip ' + z.chip[0];
