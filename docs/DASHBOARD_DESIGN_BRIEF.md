@@ -1,60 +1,62 @@
-# AutoChore — Dashboard Design Brief (for Google Stitch)
+# CHARM — Dashboard Design Brief (for Google Stitch)
 
-A brief to generate the **executive/supervisor dashboard** UI. Paste the "Context" section first, then generate each screen from its prompt. The goal is a polished, pitch-ready design for facility-services executives.
+CHARM = **Continuous Human Activity Recognition Module**.
 
----
-
-## Context (give this to Stitch first)
-
-AutoChore is a workforce-monitoring product for commercial cleaning / janitorial teams. Staff wear a screen-free wristband that automatically records what cleaning work they do, where, and when — with zero interaction ("zero touch"). At the end of a shift the band uploads its data, and this dashboard shows supervisors and facility executives what happened across the building.
-
-Audience: facility-services **executives and supervisors** — not technical users. They care about outcomes: Is the building being cleaned? By whom? Where? What was missed? How well is the team utilised?
-
-Show **outcomes, not raw sensor data.** No accelerometer charts, no signal plots, no engineering jargon. Think operations dashboard, not a science tool.
-
-**Visual style:** clean, modern, professional, trustworthy. Light theme. Generous whitespace. Clear KPIs, simple charts (bars, donuts, timelines), and a building/floor map. A calm, corporate palette (one strong accent colour). Desktop-first (executives view on laptops), but tidy.
-
-**Domain terms:** zones/areas, floors, chores (mop, vacuum, dust, clean toilets, wipe windows, empty trash), shift, roster/assignment, coverage, utilisation, transit (walking between areas), idle, exceptions/flags.
+A brief to generate the **executive/supervisor dashboard** UI for an enterprise facilities product. Paste the "Context" section into Stitch first, then generate each screen from its prompt. Goal: a polished, pitch-ready design for facility-services executives.
 
 ---
 
-## Screen 1 — Building Overview (the landing / hero screen)
+## Context (paste this into Stitch first)
+
+CHARM is an **enterprise B2B operations dashboard** for **commercial cleaning and facilities management** — used by supervisors and executives at large facility-services companies that clean offices, hospitals, malls, and airports.
+
+**How the data is captured:** each cleaning staff member wears a **screen-free wrist band** (a wearable, like a fitness tracker) for their shift. The band has motion and altitude sensors and automatically records their activity — the worker does nothing, taps no buttons. At the end of the shift the band is returned to base and **uploads the day's data**, which is processed and shown in this dashboard. (Data arrives per shift, not live.)
+
+**What it detects** from the band's motion data: the worker's **activity** through the shift — active work, walking between areas (transit), idle time — and which **cleaning task** they were performing (mopping, vacuuming, dusting, restroom cleaning, window cleaning, waste removal), in which **zone/floor** of the building.
+
+**Audience:** facility **executives and supervisors** — non-technical. They care about outcomes: Is the building being cleaned? By whom? Where? What was missed? How well is the team utilised?
+
+**Show outcomes, not raw sensor data.** No motion/accelerometer charts, no signal plots, no engineering jargon. This is an operations dashboard, not an analytics or science tool.
+
+**Visual style:** clean, modern, professional, trustworthy enterprise SaaS. Light theme, generous whitespace, clear KPI cards, simple charts (bars, donuts, horizontal timelines), and a building/floor map. Calm corporate palette with one strong accent colour. Desktop-first (viewed on laptops).
+
+**Domain terms to use:** cleaning task, activity, zone/area, floor, shift, roster/assignment, coverage, utilisation, transit, idle, exception/flag. **Do not use the word "chore."**
+
+---
+
+## Screen 1 — Building Overview (landing / hero screen)
 
 The at-a-glance daily picture for a facility manager.
 
-Include:
-- A header with the building name, date, and shift selector.
-- A row of **KPI cards**: Coverage % (areas cleaned vs planned), Staff on shift, Active time vs idle %, Exceptions count.
-- A **building coverage view**: a floor/zone map or floor list with a **heatmap** — green = cleaned/covered, amber = partial, red = missed.
-- An **exceptions panel**: a short list of flagged items in plain English (e.g. "3rd-floor toilets not cleaned", "East stairwell skipped", "Worker idle 45 min").
-- A small **team summary**: list of workers with a coverage/utilisation indicator each.
+- Header: building name, date, shift selector.
+- Row of **KPI cards**: Coverage % (areas cleaned vs planned), Staff on shift, Active vs idle time, Exceptions count.
+- **Building coverage view**: a floor/zone map or floor list with a **heatmap** — green = covered, amber = partial, red = missed.
+- **Exceptions panel**: short list of flagged items in plain English (e.g. "3rd-floor restrooms not cleaned", "East stairwell skipped", "Worker idle 45 min").
+- **Team summary**: workers listed with a coverage/utilisation indicator each.
 
 ## Screen 2 — Worker Shift Timeline
 
-A single worker's day, top to bottom.
+One worker's day, top to bottom.
 
-Include:
 - Worker name/photo, assigned zones (from roster), shift hours.
-- A **horizontal timeline** across the shift showing coloured segments: **chore episodes** (each chore a colour), **transit** (walking between areas), and **idle**. Hovering a segment shows the activity + duration + location.
-- Summary stats: total active time, time per chore, areas visited, floors changed.
-- A **"vs assignment"** note: did they do what they were rostered to do (plain-English).
+- A **horizontal timeline** across the shift with coloured segments: **task episodes** (each cleaning task a colour), **transit** (walking between areas), and **idle**. Hover shows activity + duration + location.
+- Summary stats: total active time, time per task, areas visited, floors changed.
+- A **"vs assignment"** line: did they do what they were rostered to do (plain English).
 
 ## Screen 3 — Coverage Map / Floor Plan
 
 The spatial view of what got done.
 
-Include:
-- A **floor plan** (or stacked floor diagram) with zones shaded by coverage status (cleaned / partial / missed).
-- A floor switcher.
-- Per-zone detail on click: which chore, by whom, when, duration.
-- A legend.
+- A **floor plan** (or stacked floor diagram) with zones shaded by status (covered / partial / missed).
+- Floor switcher.
+- Per-zone detail on click: which task, by whom, when, duration.
+- Legend.
 
 ## Screen 4 — Exceptions & Daily Summary
 
 The "what should I pay attention to" screen, with the AI narrative.
 
-Include:
-- A **plain-English daily summary** at the top (written paragraph): what was accomplished, what was missed, anything unusual. (This is the LLM-generated narrative.)
+- A **plain-English daily summary** paragraph at the top: what was accomplished, what was missed, anything unusual (AI-generated narrative).
 - A prioritised **list of exceptions/flags** with severity (missed areas, under-utilisation, anomalies vs roster), each with a short explanation.
 - Filters by floor / worker / severity.
 
@@ -62,15 +64,14 @@ Include:
 
 Comparison across the whole team for the shift.
 
-Include:
-- A table or card grid of workers: assigned zone, coverage %, active vs idle, exceptions.
-- Sort/filter. A simple bar chart comparing utilisation across the team.
+- Table or card grid of workers: assigned zone, coverage %, active vs idle, exceptions.
+- Sort/filter; a simple bar chart comparing utilisation across the team.
 
 ---
 
 ## Notes for whoever generates these
 
-- Use **realistic sample content** (real-sounding worker names, floors, chores, times) so the screens read as a live product.
-- Keep the same visual system across all screens (shared header, colours, components).
+- Use **realistic enterprise sample content** (real-sounding worker names, building floors, cleaning tasks, times) so screens read as a live product.
+- Keep one consistent visual system across all screens (shared header, colours, components).
 - Prioritise Screens 1, 2, and 4 — they carry the pitch. Screens 3 and 5 are supporting.
-- Deliverable back to the dev: the generated **screen PNGs**, which will then be built as a web dashboard.
+- Deliverable: the generated **screen PNGs**, which will be built into a web dashboard.
