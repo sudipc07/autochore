@@ -46,7 +46,7 @@ A device records motion sensors while a person performs a **labelled** chore. Ea
 | Source | Description | Sample rate | Sensors |
 |--------|-------------|-------------|---------|
 | **Apple Watch** | Standalone watchOS app ("AutoChore") | 50 Hz | accel, gravity, gyro, orientation, magnetometer, altitude, floor count |
-| **EVA FSM300 IMU board** | Custom hardware, posts directly over the API | ~228 Hz reported (≈128 Hz effective — see issues) | accel, gyro, magnetometer |
+| **CEVA FSM300 IMU board** | Custom hardware, posts directly over the API | ~228 Hz reported (≈128 Hz effective — see issues) | accel, gyro, magnetometer |
 
 Each session is tagged with a device/person label (the `user_id`). Watch users pick a character name on first launch; the board sends a fixed label.
 
