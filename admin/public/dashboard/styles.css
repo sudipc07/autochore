@@ -139,6 +139,7 @@ table.data tr:last-child td { border-bottom: none; }
 .chip.warn { background: var(--warning-bg); color: #9a6400; }
 .chip.bad { background: var(--error-bg); color: #b42318; }
 .chip.neutral { background: #eef2f7; color: var(--muted); }
+.chip.prog { background: #e6e9ff; color: #3730a3; }
 
 /* ---- Buttons ---- */
 .btn { font-family: inherit; font-size: 14px; font-weight: 600; padding: 9px 16px; border-radius: var(--radius); cursor: pointer; border: 1px solid transparent; }
@@ -184,7 +185,9 @@ table.data tr:last-child td { border-bottom: none; }
 
 /* ---- Floor plan (coverage) ---- */
 .floorplan { display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(4, 70px); gap: 8px; }
-.zone { border-radius: 8px; border: 1px dashed rgba(0,0,0,.12); padding: 10px; font-size: 12px; font-weight: 600; color: #33405a; display: flex; align-items: flex-start; }
+.zone { border-radius: 8px; border: 1px dashed rgba(0,0,0,.12); padding: 10px; font-size: 12px; font-weight: 600; color: #33405a; display: flex; align-items: flex-start; cursor: pointer; transition: filter .12s, box-shadow .12s; }
+.zone:hover { filter: brightness(0.96); }
+.zone.selected { outline: 2px solid var(--navy); outline-offset: -2px; box-shadow: var(--shadow); }
 .z-ok { background: #d8f3e7; }
 .z-warn { background: #fdeccc; }
 .z-bad { background: #fbd9d9; }
