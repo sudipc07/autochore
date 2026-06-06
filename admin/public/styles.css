@@ -93,14 +93,21 @@ dl.meta { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 
 dl.meta dt { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
 dl.meta dd { margin: 2px 0 0; }
 
-.actions { display: flex; gap: 10px; margin: 16px 0 4px; }
+.actions { display: flex; gap: 10px; margin: 16px 0 4px; align-items: stretch; }
 .btn {
   background: var(--accent); color: #fff; border: none; text-decoration: none;
   padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 14px;
 }
 .btn-warn { background: #c2603a; }
 .btn-muted { background: var(--line); color: var(--text); }
-.archive-form { display: inline; }
+/* Let the button participate in the .actions flex row directly, so it lines
+   up with the Download/Copy buttons instead of sitting inside a stretched form. */
+.archive-form { display: contents; }
+/* Normalise the three controls so anchors and buttons render identically. */
+.actions .btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  line-height: 1.2; font-family: inherit; box-sizing: border-box;
+}
 .archive-link { margin: -6px 0 16px; }
 .archive-link a { color: var(--accent); text-decoration: none; font-size: 13px; }
 .archived-note { color: #e0a93b; font-size: 13px; margin: 8px 0 0; }
