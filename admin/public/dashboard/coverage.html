@@ -50,7 +50,8 @@
           <p class="muted" style="font-size:13px;margin-top:14px">Tap a zone to view detailed history and current status.</p>
         </div>
 
-        <div>
+        <div id="detailPane">
+          <button class="sheet-back" onclick="closeDetail()">← Back to map</button>
           <div class="ai-insight" style="margin-bottom:16px"><div class="tag">✦ Operational Insight</div>Floor 3 is currently at <b>84% coverage</b>. High traffic in the North Wing Offices has led to a status downgrade. Recommend deploying additional support to the Central Breakroom, which is overdue for a deep clean.</div>
           <div class="card pad zone-detail">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div class="section-title" style="margin:0" id="zd-name">Restroom East</div><span class="chip ok" id="zd-chip">Covered</span></div>
@@ -82,10 +83,17 @@ const ZONES = {
   'restroom-e': { name: 'Restroom East', chip: ['ok','Covered'], sub: 'Public Area · High Priority', cleaned: '10:45 AM · by Sarah Chen', task: 'Restroom Cleaning', dur: '22m' },
 };
 
-function selectZone(id) {
+function closeDetail() { document.getElementById('detailPane').classList.remove('open'); }
+
+function selectZone(id, open) {
   const z = ZONES[id];
   if (!z) return;
   document.querySelectorAll('.zone').forEach((el) => el.classList.toggle('selected', el.dataset.zone === id));
+  if (open && window.matchMedia('(max-width: 768px)').matches) {
+    const p = document.getElementById('detailPane');
+    p.classList.add('open');
+    p.scrollTop = 0;
+  }
   document.getElementById('zd-name').textContent = z.name;
   const chip = document.getElementById('zd-chip');
   chip.className = 'chip ' + z.chip[0];
@@ -97,7 +105,7 @@ function selectZone(id) {
 }
 
 document.querySelectorAll('.zone').forEach((el) => {
-  el.addEventListener('click', () => selectZone(el.dataset.zone));
+  el.addEventListener('click', () => selectZone(el.dataset.zone, true));
 });
 selectZone('restroom-e');
 </script>

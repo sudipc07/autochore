@@ -34,7 +34,8 @@
         <div class="wlist" id="wlist"></div>
 
         <!-- RIGHT: detail -->
-        <div>
+        <div id="detailPane">
+          <button class="sheet-back" onclick="closeDetail()">← Back to team</button>
           <div class="card pad">
             <div class="who-cell" style="gap:14px">
               <div class="avatar" id="dAvatar" style="width:46px;height:46px;font-size:16px">AR</div>
@@ -115,15 +116,22 @@ WORKERS.forEach((w, i) => {
       <span class="mini-track track" style="flex:1"><span class="${cov}" style="width:${w.coverage}%"></span></span>
       <span class="muted" style="font-weight:600">${w.coverage}%</span>
     </div>`;
-  card.addEventListener('click', () => select(w.id));
+  card.addEventListener('click', () => select(w.id, true));
   wlist.appendChild(card);
 });
 
+function closeDetail() { document.getElementById('detailPane').classList.remove('open'); }
+
 // ---- render the detail for a worker ----
-function select(id) {
+function select(id, open) {
   const w = WORKERS.find((x) => x.id === id);
   if (!w) return;
   document.querySelectorAll('.wcard').forEach((c) => c.classList.toggle('selected', c.dataset.id === id));
+  if (open && window.matchMedia('(max-width: 768px)').matches) {
+    const p = document.getElementById('detailPane');
+    p.classList.add('open');
+    p.scrollTop = 0;
+  }
 
   document.getElementById('dAvatar').textContent = w.initials;
   document.getElementById('dAvatar').style.background = w.color;
