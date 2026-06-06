@@ -1,151 +1,139 @@
 # AutoChore — Project Overview
 
-*An experiment to detect cleaning chores from wearable motion data.*
+> **In one line:** an experiment to find out whether cleaning chores (mop, vacuum, dust…) can be recognised from wearable motion data — as a stepping stone to a custom wearable band for janitorial staff.
+>
+> **Status:** Pipeline live end-to-end. Early result is positive — chores separate clearly by motion rhythm. Now collecting more data.
 
 ---
 
-## 1. What this is
-
-A throwaway experiment toward a future product: a **custom wearable band for janitorial staff** that automatically logs which chore they're doing (and where in a building — floors up/down) from motion sensors.
-
-Before building hardware, we're collecting **labelled motion data** using devices we already have — Apple Watches and a friend's hardware IMU board — to answer one question:
-
-> **Can we tell chores apart (mop vs vacuum vs dust…) from motion alone?**
-
-Early answer: **yes, promising.** Chores separate clearly by motion rhythm (see Findings).
+## Contents
+1. Goal & status
+2. How it works
+3. Data sources (devices)
+4. System components
+5. Data model
+6. Findings so far
+7. Data-quality issues & actions
+8. Roadmap
+9. Access & links
 
 ---
 
-## 2. The pipeline
+## 1. Goal & status
+
+**Goal.** The eventual product is a wrist/band device for janitorial staff that auto-logs which chore is being performed and movement through a building (floors up/down). Before committing to hardware, we collect **labelled motion data** from devices we already have and test the core question:
+
+> **Can chores be told apart from motion alone?**
+
+**Status.** Yes — promising. Across multiple sessions and two different devices, chores order consistently by their motion rhythm. The full data pipeline (capture → store → inspect → analyse) is running.
+
+---
+
+## 2. How it works
 
 ```
-Apple Watch (watchOS app)  ─┐
-                            ├──►  Supabase  ──►  Admin dashboard
-Hardware IMU board (REST)  ─┘   (DB + Storage)   (autochore.bubbles.work)
+Apple Watch app  ─┐
+                  ├──►  Supabase (database + file storage)  ──►  Web dashboard
+IMU sensor board ─┘
 ```
 
-- **Recording devices** capture accelerometer / gyroscope / magnetometer (+ more) while someone does a labelled chore.
-- Each session is pushed to **Supabase** (Postgres for metadata, Storage for the raw sample stream).
-- The **admin dashboard** lets us browse, chart, analyse, and download sessions.
+A device records motion sensors while a person performs a **labelled** chore. Each recording ("session") is uploaded to Supabase. A web dashboard is used to browse, chart, analyse, and export the data.
 
 ---
 
-## 3. Components
+## 3. Data sources (devices)
 
-### a) watchOS app ("AutoChore")
-- Standalone Apple Watch app (SwiftUI), bundle id `com.mobile80.AutoChore`.
-- First launch: pick a character name (Phineas & Ferb pool) → becomes the `user_id`, locked to the device.
-- Home screen: chore tiles (shared list from Supabase) + "Add" for new chores.
-- Record flow: tap chore → 3-2-1 countdown → records sensors → hold-to-stop (auto-stops at 10 min).
-- Captures at 50 Hz: user-accel, gravity, gyroscope, orientation (roll/pitch/yaw), quaternion, magnetometer, heading; plus relative altitude and floor counts (stairs).
-- Uses a HealthKit **workout session** to keep recording at full rate with the screen off / wrist down.
-- Failed uploads are saved locally and retried on next launch.
-- Distributed via **TestFlight** (Internal).
+| Source | Description | Sample rate | Sensors |
+|--------|-------------|-------------|---------|
+| **Apple Watch** | Standalone watchOS app ("AutoChore") | 50 Hz | accel, gravity, gyro, orientation, magnetometer, altitude, floor count |
+| **EVA FSM300 IMU board** | Custom hardware, posts directly over the API | ~228 Hz reported (≈128 Hz effective — see issues) | accel, gyro, magnetometer |
 
-### b) Hardware board (friend "L")
-- A custom IMU board posts sessions directly to Supabase via REST (no app needed).
-- Documented in `docs/HARDWARE_API.md`.
-- Assigned device names: **Bender**, **Wall-E**.
+Each session is tagged with a device/person label (the `user_id`). Watch users pick a character name on first launch; the board sends a fixed label.
 
-### c) Backend — Supabase
-- Project URL: `https://jehrccwdwrjybzzksgmr.supabase.co`
-- Publishable (client) key is embedded in the app/board; **RLS is off** for the experiment.
-- Tables: `chores`, `sessions`, `devices`.
-- `raw-sessions` Storage bucket holds the raw sample stream as a file per session (so long sessions of any size upload reliably). The `sessions` row keeps metadata + a `samples_path` pointer.
-
-### d) Admin dashboard
-- **URL: https://autochore.bubbles.work**
-- Login: shared password (**`delta-chores-2`**) — *internal only; rotate before any wider use.*
-- Node/Express app on the EC2 box (`52.6.169.112`, pm2 process `autochore-admin`, port 3003, nginx + TLS).
-- Pages:
-  - **Sessions list** — filter by chore/user; **"Chore signatures"** comparison table at the top.
-  - **Session detail** — per-session motion analysis (plain-English), charts (accel, gravity, gyro, orientation, magnetometer, heading, altitude), Download CSV, Copy JSON.
-  - **Devices** — registered device names + session counts.
-- The Supabase key stays server-side; the browser only talks to this app, gated by login.
-
-### e) Analysis script
-- `analysis/analyze_sessions.py` — pulls sessions, extracts features (stroke rate, intensity, spectrum), prints a table, saves comparison plots.
-- Run: `python3 analysis/analyze_sessions.py --user Bender --plot out.png`
+> **Note:** the FSM300 board has been run in more than one configuration. Its full-scale ranges and native output rate should be recorded from the datasheet so its raw readings can be converted to physical units (see Issues §7).
 
 ---
 
-## 4. Data model
+## 4. System components
 
-**`sessions`**
+**a) watchOS app ("AutoChore")**
+Standalone Apple Watch app. Flow: pick a name → choose a chore → 3-2-1 countdown → record → hold-to-stop (auto-stops after 10 minutes). Records all motion channels at 50 Hz and keeps recording with the screen off via a HealthKit workout session. Uploads each session; retries automatically if offline. Distributed to testers via TestFlight.
 
-| Column | Notes |
-|---|---|
-| id (uuid) | |
-| user_id (text) | device/person label, e.g. Perry, Bender |
-| chore_label (text) | Mop, Vacuum, Dust, … |
-| start_time / end_time | timestamps |
-| sample_rate (int) | reported Hz |
-| sample_count (int) | number of motion samples |
-| notes (text) | optional |
-| motion_samples (jsonb) | inline samples (older rows) OR null when stored as a file |
-| altitude_samples (jsonb) | relative altitude stream |
-| floor_summary (jsonb) | floors ascended / descended |
-| samples_path (text) | file in `raw-sessions` Storage (newer rows) |
+**b) IMU board integration**
+The hardware board posts sessions to the same backend over a simple REST API — no app required. Integration guide is in the code repository (see §9).
 
-**Motion sample fields:** `t` (ms), `ax ay az` (accel), `gravx gravy gravz`, `gx gy gz` (gyro), `roll pitch yaw`, `qw qx qy qz`, `mx my mz` (+ `magacc`), `heading`. *(Hardware boards send the subset they have — typically `t, ax/ay/az, gx/gy/gz`, and optionally mag.)*
+**c) Backend — Supabase**
+Hosted Postgres + file storage. Holds the chore list, session metadata, and a device registry; the raw sample stream for each session is stored as a file so recordings of any length upload reliably. Access is via a client key embedded in the devices (row-level security is intentionally off for the experiment).
 
-**`chores`** — shared chore list (label, sort_order). **`devices`** — name ↔ device_id registry.
+**d) Web dashboard**
+Internal site for the team:
+- **Sessions list** with filters and a top-level **"Chore signatures"** comparison table.
+- **Session detail** — a plain-English motion analysis, charts for every sensor channel, and CSV / JSON export.
+- **Devices** — registered device names and their session counts.
+The dashboard talks to Supabase server-side (the key never reaches the browser) and is gated by a shared login.
+
+**e) Analysis tooling**
+A script in the repository extracts motion features (stroke rate, intensity, frequency spectrum) and produces comparison plots. Re-runnable as data grows.
 
 ---
 
-## 5. Data collected so far (as of 2026-06-06)
+## 5. Data model
 
-| Source | Sessions | Notes |
-|---|---|---|
-| **Perry** (Apple Watch) | 5 | Cook, Mop, Break, Typing. Mostly throttled rate (see Issues). |
-| **Bender** (L's board) | 30 | Vacuum, Mop, Dust. Two distinct hardware configs (see Issues). |
-| Phineas / Sprout (test) | 2 | Early 0-sample test rows — junk. |
+**Session** — one recording:
+`user_id`, `chore_label`, `start_time`, `end_time`, `sample_rate`, `sample_count`, optional `notes`, `floor_summary` (floors up/down), and the raw motion stream (stored as a file, referenced by `samples_path`).
+
+**Motion sample** — one reading in the stream:
+`t` (ms since start), accelerometer `ax/ay/az`, gravity `gravx/gravy/gravz`, gyroscope `gx/gy/gz`, orientation `roll/pitch/yaw`, quaternion `qw/qx/qy/qz`, magnetometer `mx/my/mz`, heading. *Hardware boards send the subset they support (typically accel + gyro, plus magnetometer when enabled).*
+
+**Supporting tables** — a shared **chore list** and a **device registry** (name ↔ device id).
 
 ---
 
 ## 6. Findings so far
 
-**Chores separate by motion rhythm.** On the reliable sessions, the dominant "stroke rate" cleanly orders the chores, consistently across devices and config changes:
+On the reliable sessions, the dominant **stroke rate** (how often the motion repeats) orders the chores consistently — across both devices and configuration changes:
 
-| Chore | Stroke rate | Character |
-|---|---|---|
-| **Vacuum** | ~30–41 / min | slowest — long push-pull |
+| Chore | Stroke rate | Motion character |
+|-------|-------------|------------------|
+| **Vacuum** | ~30–41 / min | slowest — long, smooth push-pull |
 | **Mop** | ~58–64 / min | vigorous mid-tempo strokes |
-| **Dust** | ~62–74 / min | fastest — quick bursty wipes |
+| **Dust** | ~62–74 / min | fastest — quick, bursty wipes |
 
-The analysis uses **device-independent features** (stroke frequency, burstiness) so the watch (g-units) and the board (raw counts) can be compared without calibration.
+The analysis uses **device-independent features** (rhythm and burstiness, which don't depend on units), so the Watch and the board can be compared directly without calibration.
 
-**Conclusion:** the core hypothesis holds — motion alone distinguishes these chores. This justifies collecting more data and, later, training a proper classifier.
-
----
-
-## 7. Known issues / data-quality notes
-
-1. **Apple Watch sample rate was throttled** to 5–11 Hz on active chores (the OS suspends backgrounded apps). Fixed via a HealthKit workout session — *but not yet confirmed on a fresh active-chore recording.* One clean 50 Hz watch chore is the key outstanding validation.
-2. **L's board sends two different configurations under one name ("Bender"):**
-   - *Batch A (May 31):* 100 Hz, no magnetometer.
-   - *Batch B (June 6):* ~228 Hz, magnetometer on, different sensor ranges.
-   - Treat them as two sources. (Recommend L use a distinct name per physical board.)
-3. **L's 228 Hz is really ~128 Hz** — ~44% of samples are exact duplicates (sensor output rate is slower than the transmit loop).
-4. **Units not yet calibrated.** The board sends raw integer counts; the watch sends g / rad-s. Absolute magnitudes aren't comparable across devices until L provides the IMU model + full-scale ranges. (Rhythm-based features are unaffected.)
-5. **Many tiny 1–3 s "Vacuum" bursts** from L's board (every 10 min) are too short to analyse and are excluded from the signature table (but kept in the raw data).
+**Takeaway:** the core hypothesis holds — motion alone distinguishes these chores. This justifies collecting more data and, later, training a classifier.
 
 ---
 
-## 8. Open items / next steps
+## 7. Data-quality issues & actions
 
-- [ ] Record a **clean 50 Hz active chore on the Apple Watch** (validate the HealthKit fix).
-- [ ] Get from L: **IMU model + accel/gyro full-scale ranges**; fix the duplicate/ODR mismatch; use a **distinct device name** per board.
-- [ ] Collect **≥10 sessions per chore** for meaningful clustering.
+| # | Issue | Action |
+|---|-------|--------|
+| 1 | **Apple Watch throttled** to 5–11 Hz on active chores (OS suspends background apps). Fixed via a HealthKit workout session, but **not yet re-validated** on a fresh active chore. | Record one clean 50 Hz active chore on the Watch. |
+| 2 | **The FSM300 board has run in two configurations** under one label — an earlier 100 Hz / no-magnetometer setup and a later ~228 Hz / magnetometer-on setup. They behave like two different sources. | Use a **distinct device name per physical board / config**; register devices. |
+| 3 | **Reported 228 Hz is really ~128 Hz** — about 44% of samples are exact duplicates (the sensor's output rate is slower than the board's transmit loop). | Raise the FSM300 output data rate to match, or lower the transmit rate. |
+| 4 | **Units not calibrated.** The board sends raw counts; the Watch sends g / rad-s. Absolute magnitudes aren't comparable across devices yet. | Record the FSM300 model + accelerometer & gyroscope full-scale ranges; add a conversion step. |
+| 5 | **Many 1–3 second burst sessions** from the board are too short to analyse. | Already excluded from analysis; kept in raw data. |
+
+---
+
+## 8. Roadmap
+
+- [ ] Validate the Apple Watch at a clean 50 Hz on an active chore.
+- [ ] Lock the FSM300 configuration; capture its datasheet specs; fix the duplicate-sample rate.
+- [ ] Collect **≥10 sessions per chore**.
 - [ ] Add a **second person** recording the same chores (tests whether one model generalises).
-- [ ] Once calibrated + more data: train a simple **chore classifier** and report accuracy.
+- [ ] Train a simple **chore classifier** and report accuracy.
 
 ---
 
-## 9. Quick reference
+## 9. Access & links
 
-- **Admin dashboard:** https://autochore.bubbles.work (password: `delta-chores-2`)
-- **Supabase:** https://jehrccwdwrjybzzksgmr.supabase.co
-- **Code repo:** https://github.com/sudipc07/autochore
-- **Hardware API guide:** `docs/HARDWARE_API.md` in the repo
-- **Server:** EC2 `52.6.169.112`, pm2 process `autochore-admin` (port 3003), nginx vhost `autochore.bubbles.work`
+| | |
+|---|---|
+| **Web dashboard** | https://autochore.bubbles.work *(team login required)* |
+| **Code repository** | https://github.com/sudipc07/autochore |
+| **Hardware API guide** | https://github.com/sudipc07/autochore/blob/main/docs/HARDWARE_API.md |
+| **Backend** | Supabase (hosted) |
+
+*Credentials (dashboard login, API keys) are shared separately, not in this page.*
