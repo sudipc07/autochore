@@ -189,8 +189,8 @@ table.data tr:last-child td { border-bottom: none; }
 .trace-axis { display: flex; justify-content: space-between; font-size: 11px; color: var(--faint); margin-top: 14px; border-top: 1px dashed var(--border); padding-top: 7px; }
 @media (max-width: 640px) {
   .trace-bars { height: 120px; }
-  .trace-labels .lab small { display: none; }
   .trace-labels .lab { font-size: 10px; }
+  .trace-labels .lab small { font-size: 9px; }
 }
 
 .stat { text-align: left; }
