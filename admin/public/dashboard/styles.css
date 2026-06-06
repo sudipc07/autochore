@@ -47,11 +47,8 @@ a { color: inherit; text-decoration: none; }
   width: 240px; flex-shrink: 0; background: var(--navy); color: #aeb6c9;
   display: flex; flex-direction: column; padding: 22px 16px; position: sticky; top: 0; height: 100vh;
 }
-.brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 24px; }
-.brand .mark { width: 26px; height: 26px; border-radius: 7px; background: linear-gradient(135deg, #645efb, #4b41e1); display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 14px; }
-.brand .name { color: #fff; font-weight: 700; font-size: 15px; letter-spacing: .2px; }
-.brand .name .tm { font-size: 8px; font-weight: 600; vertical-align: super; margin-left: 1px; opacity: .85; }
-.brand small { display: block; color: #7e88a3; font-size: 11px; font-weight: 500; }
+.brand { padding: 6px 8px 26px; }
+.brand .logo { width: 176px; height: auto; display: block; }
 .nav { display: flex; flex-direction: column; gap: 4px; }
 .nav a {
   display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--radius);
