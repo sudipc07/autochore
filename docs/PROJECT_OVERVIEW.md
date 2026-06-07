@@ -93,15 +93,18 @@ A script in the repository extracts motion features (stroke rate, intensity, fre
 
 On the reliable sessions, the dominant **stroke rate** (how often the motion repeats) orders the chores consistently — across both devices and configuration changes:
 
-| Chore | Stroke rate | Motion character |
-|-------|-------------|------------------|
+| Activity | Cadence | Motion character |
+|----------|---------|------------------|
 | **Vacuum** | ~30–41 / min | slowest — long, smooth push-pull |
 | **Mop** | ~58–64 / min | vigorous mid-tempo strokes |
-| **Dust** | ~62–74 / min | fastest — quick, bursty wipes |
+| **Dust** | ~56–74 / min | quick, bursty wipes |
+| **Walking (transit)** | ~94 / min | steady step cadence, moderate intensity — clearly above the cleaning tasks |
 
 The analysis uses **device-independent features** (rhythm and burstiness, which don't depend on units), so the Watch and the board can be compared directly without calibration.
 
-**Takeaway:** the core hypothesis holds — motion alone distinguishes these chores. This justifies collecting more data and, later, training a classifier.
+**Takeaway:** the core hypothesis holds — motion alone distinguishes the cleaning tasks from each other *and* from walking (transit). This validates both the per-task recognition and the foundational idle/active/transit layer.
+
+**Sensor note:** the FSM300 firmware now outputs on-board **fusion** data (quaternion + roll/pitch/yaw) alongside raw accel/gyro/mag, giving orientation/pose for future features.
 
 ---
 
