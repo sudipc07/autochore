@@ -188,6 +188,11 @@ function detailPage(session, analysis) {
   </div>
   ${session.archived ? '<p class="archived-note">This session is archived (hidden from the main list and analysis).</p>' : ''}
 
+  <h2>Movement path <span style="font-size:12px;color:#888;font-weight:400">(reconstructed · experimental)</span></h2>
+  <canvas id="pathCanvas" height="320"></canvas>
+  <p id="pathNote" class="empty" style="display:none">Not enough steps to reconstruct a path.</p>
+  <p class="muted" style="font-size:12px;margin-top:4px">Dead-reckoned from steps + heading. Relative shape only (no absolute position); drifts over long sessions.</p>
+
   <h2>Accelerometer (g) — X / Y / Z</h2>
   <canvas id="accelChart" height="120"></canvas>
 
