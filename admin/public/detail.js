@@ -175,6 +175,31 @@
     const py = (vy) => chh - (oy + vy * sc); // flip y so "up" is up
 
     ctx.clearRect(0, 0, cw, chh);
+
+    // --- metre grid + scale labels ---
+    const niceStep = (r) => {
+      const p = Math.pow(10, Math.floor(Math.log10(r)));
+      const f = r / p;
+      return (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10) * p;
+    };
+    const stepM = niceStep(70 / sc) || 1;
+    ctx.font = '10px -apple-system, sans-serif';
+    ctx.textBaseline = 'alphabetic';
+    for (let gx = Math.ceil(minx / stepM) * stepM; gx <= maxx + 1e-6; gx += stepM) {
+      const X = px(gx);
+      ctx.strokeStyle = Math.abs(gx) < 1e-6 ? '#3a4150' : '#2a2e37';
+      ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(X, 0); ctx.lineTo(X, chh); ctx.stroke();
+      ctx.fillStyle = '#9aa0ab'; ctx.fillText(gx.toFixed(0), X + 3, chh - 4);
+    }
+    for (let gy = Math.ceil(miny / stepM) * stepM; gy <= maxy + 1e-6; gy += stepM) {
+      const Y = py(gy);
+      ctx.strokeStyle = Math.abs(gy) < 1e-6 ? '#3a4150' : '#2a2e37';
+      ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, Y); ctx.lineTo(cw, Y); ctx.stroke();
+      ctx.fillStyle = '#9aa0ab'; ctx.fillText(gy.toFixed(0), 3, Y - 3);
+    }
+    ctx.fillStyle = '#9aa0ab'; ctx.fillText('metres', cw - 46, 14);
+
+    // --- path ---
     ctx.strokeStyle = '#4f8cff'; ctx.lineWidth = 2; ctx.lineJoin = 'round';
     ctx.beginPath();
     xs.forEach((vx, i) => { const X = px(vx), Y = py(ys[i]); i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); });
