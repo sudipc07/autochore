@@ -126,6 +126,24 @@
     return bom;
   }
 
+  function descendantIds(bom, id) {
+    const out = []; const stack = [id];
+    while (stack.length) { const cur = stack.pop(); for (const x of bom) if ((x.parentId || null) === cur) { out.push(x.id); stack.push(x.id); } }
+    return out;
+  }
+  // Move a line's entry to sit right after `anchorId`'s whole subtree, so it
+  // renders in the expected spot after a re-parent (indent/outdent).
+  function moveAfterSubtree(id, anchorId) {
+    const entry = D().bom.find((x) => x.id === id);
+    if (!entry) return;
+    const rest = D().bom.filter((x) => x.id !== id);
+    const sub = new Set([anchorId, ...descendantIds(rest, anchorId)]);
+    let lastIdx = -1;
+    rest.forEach((x, k) => { if (sub.has(x.id)) lastIdx = k; });
+    rest.splice(lastIdx + 1, 0, entry);
+    D().bom = rest;
+  }
+
   const childrenOf = (bom, id) => bom.filter((l) => (l.parentId || null) === id);
   const isParent = (bom, l) => bom.some((c) => (c.parentId || null) === l.id);
   // Unit cost of a line at a tier: a parent rolls up from children unless that
@@ -334,9 +352,19 @@
         ? `<td class="num qty">${esc(l.qty)}</td>`
         : `<td class="num qty"><input class="num" type="number" min="0" step="1" data-edit="qty" data-id="${l.id}" value="${esc(l.qty)}" ${ro}></td>`;
       const addBtn = isAdmin() && !l.via ? `<button class="add-child" data-act="addChild" data-id="${l.id}" title="Add a component under this">+</button>` : '';
-      const acts = isAdmin() && !l.via
-        ? `<td class="col-act"><button class="icon-x" data-act="delLine" data-id="${l.id}" title="Delete (with children)">×</button></td>`
-        : '<td class="col-act"></td>';
+      let acts = '<td class="col-act"></td>';
+      if (isAdmin() && !l.via) {
+        const baseSibs = D().bom.filter((x) => (x.parentId || null) === (l.parentId || null));
+        const canIndent = baseSibs.findIndex((x) => x.id === l.id) > 0;   // has a sibling above to nest under
+        const canOutdent = !!l.parentId;
+        const out = canOutdent
+          ? `<button class="icon-x" data-act="outdent" data-id="${l.id}" title="Outdent — move up a level">←</button>`
+          : '<span class="act-sp"></span>';
+        const ind = canIndent
+          ? `<button class="icon-x" data-act="indent" data-id="${l.id}" title="Indent — nest under the row above">→</button>`
+          : '<span class="act-sp"></span>';
+        acts = `<td class="col-act">${out}${ind}<button class="icon-x" data-act="delLine" data-id="${l.id}" title="Delete (with children)">×</button></td>`;
+      }
       return `<tr class="${isP ? 'parent' : ''}${l.via ? ' muted-row' : ''}">
         <td class="name-cell" style="padding-left:${6 + depth * 18}px">${caret}${nameInner}${addBtn}</td>
         ${qtyCell}
@@ -621,6 +649,18 @@
       case 'addLine': data.bom.push({ id: uid(), name: '', costs: {}, qty: 1, parentId: null, override: {} }); markDirty(); render(); break;
       case 'addChild': data.bom.push({ id: uid(), name: '', costs: {}, qty: 1, parentId: id, override: {} }); state.collapsed.delete(id); markDirty(); render(); break;
       case 'toggleCollapse': state.collapsed.has(id) ? state.collapsed.delete(id) : state.collapsed.add(id); render(); break;
+      case 'indent': {
+        const l = line(id);
+        const sibs = data.bom.filter((x) => (x.parentId || null) === (l.parentId || null));
+        const i = sibs.findIndex((x) => x.id === id);
+        if (i > 0) { const np = sibs[i - 1]; l.parentId = np.id; moveAfterSubtree(id, np.id); state.collapsed.delete(np.id); markDirty(); render(); }
+        break;
+      }
+      case 'outdent': {
+        const l = line(id);
+        if (l.parentId) { const p = line(l.parentId); l.parentId = p.parentId || null; moveAfterSubtree(id, p.id); markDirty(); render(); }
+        break;
+      }
       case 'toggleMode': {
         const l = line(id); const tid = b.dataset.tier; l.override = l.override || {};
         if (l.override[tid] != null) { delete l.override[tid]; }                  // → roll up from children
