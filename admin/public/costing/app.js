@@ -342,8 +342,9 @@
 
     const bomRows = ordered.map(({ l, depth }) => {
       const isP = isParent(effBom, l);
+      const chevron = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
       const caret = isP
-        ? `<span class="caret${state.collapsed.has(l.id) ? ' collapsed' : ''}" data-act="toggleCollapse" data-id="${l.id}" title="Collapse / expand">▾</span>`
+        ? `<span class="caret${state.collapsed.has(l.id) ? ' collapsed' : ''}" data-act="toggleCollapse" data-id="${l.id}" title="Collapse / expand">${chevron}</span>`
         : '<span class="caret-sp"></span>';
       const nameInner = l.via
         ? `<span class="opt-line">${esc(l.name)}<span class="via-tag">${esc(l.via)}</span></span>`
