@@ -316,10 +316,10 @@
           <span class="roll-val" data-roll="${l.id}-${t.id}">${money(unit)}</span>${tot}</td>`;
         return `<td class="num">
           <span class="mode active" data-act="toggleMode" data-id="${l.id}" data-tier="${t.id}" title="Fixed price — click to roll up from children">✎</span>
-          <input class="num cost ov" type="number" min="0" step="0.01" data-edit="override" data-id="${l.id}" data-tier="${t.id}" value="${esc(l.override[t.id])}" ${ro} placeholder="—">${tot}</td>`;
+          <input class="num cost ov" type="text" inputmode="decimal" data-edit="override" data-id="${l.id}" data-tier="${t.id}" value="${esc(l.override[t.id])}" ${ro} placeholder="—">${tot}</td>`;
       }
       return `<td class="num">
-        <input class="num cost" type="number" min="0" step="0.01" data-edit="lineCost" data-id="${l.id}" data-tier="${t.id}" value="${l.costs[t.id] != null ? esc(l.costs[t.id]) : ''}" ${ro} placeholder="—">${tot}</td>`;
+        <input class="num cost" type="text" inputmode="decimal" data-edit="lineCost" data-id="${l.id}" data-tier="${t.id}" value="${l.costs[t.id] != null ? esc(l.costs[t.id]) : ''}" ${ro} placeholder="—">${tot}</td>`;
     };
 
     const bomRows = ordered.map(({ l, depth }) => {
@@ -333,11 +333,12 @@
       const qtyCell = l.via
         ? `<td class="num qty">${esc(l.qty)}</td>`
         : `<td class="num qty"><input class="num" type="number" min="0" step="1" data-edit="qty" data-id="${l.id}" value="${esc(l.qty)}" ${ro}></td>`;
+      const addBtn = isAdmin() && !l.via ? `<button class="add-child" data-act="addChild" data-id="${l.id}" title="Add a component under this">+</button>` : '';
       const acts = isAdmin() && !l.via
-        ? `<td class="col-act"><button class="icon-x mini" data-act="addChild" data-id="${l.id}" title="Add child component">＋</button><button class="icon-x" data-act="delLine" data-id="${l.id}" title="Delete (with children)">×</button></td>`
+        ? `<td class="col-act"><button class="icon-x" data-act="delLine" data-id="${l.id}" title="Delete (with children)">×</button></td>`
         : '<td class="col-act"></td>';
       return `<tr class="${isP ? 'parent' : ''}${l.via ? ' muted-row' : ''}">
-        <td class="name-cell" style="padding-left:${6 + depth * 18}px">${caret}${nameInner}</td>
+        <td class="name-cell" style="padding-left:${6 + depth * 18}px">${caret}${nameInner}${addBtn}</td>
         ${qtyCell}
         ${tiers.map((t) => tierCell(l, t)).join('')}
         ${acts}
@@ -777,7 +778,7 @@
       })(null, 0);
       return out.join('');
     };
-    const tierCostInputs = (costs, kind) => `<div class="mod-costs">` + data.tiers.map((t) => `<div class="cc"><label>${esc(t.label)}</label><input type="number" step="0.01" data-mc="${kind}" data-tier="${t.id}" value="${costs && costs[t.id] != null ? esc(costs[t.id]) : ''}" placeholder="$"></div>`).join('') + `</div>`;
+    const tierCostInputs = (costs, kind) => `<div class="mod-costs">` + data.tiers.map((t) => `<div class="cc"><label>${esc(t.label)}</label><input type="text" inputmode="decimal" data-mc="${kind}" data-tier="${t.id}" value="${costs && costs[t.id] != null ? esc(costs[t.id]) : ''}" placeholder="$"></div>`).join('') + `</div>`;
 
     const modRows = optDraft.mods.map((m, i) => {
       const typeSel = `<select data-mod="type" data-i="${i}">
