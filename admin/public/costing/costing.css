@@ -95,8 +95,11 @@ a { color: inherit; text-decoration: none; }
 .bom input.num { text-align: right; font-variant-numeric: tabular-nums; }
 .bom input.cost::placeholder { color: #cbd5e1; }
 .col-cat { width: 150px; }
-.col-act { width: 96px; text-align: center; white-space: nowrap; }
-.act-sp { display: inline-block; width: 24px; }
+.col-act { width: 44px; text-align: center; white-space: nowrap; }
+.act-sp { display: inline-block; width: 22px; }
+.move-group { display: inline-flex; flex-shrink: 0; margin-right: 2px; }
+.move-group .move { color: var(--faint); }
+.move-group .move:hover { color: var(--indigo); background: var(--indigo-50); }
 .icon-x { border: none; background: transparent; color: var(--faint); cursor: pointer; font-size: 16px; line-height: 1; padding: 2px 6px; border-radius: 6px; flex-shrink: 0; }
 .icon-x:hover { color: var(--error); background: var(--error-bg); }
 /* ---- Hierarchical BOM (Addendum 2) ---- */

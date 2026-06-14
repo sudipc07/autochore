@@ -352,21 +352,23 @@
         ? `<td class="num qty">${esc(l.qty)}</td>`
         : `<td class="num qty"><input class="num" type="number" min="0" step="1" data-edit="qty" data-id="${l.id}" value="${esc(l.qty)}" ${ro}></td>`;
       const addBtn = isAdmin() && !l.via ? `<button class="add-child" data-act="addChild" data-id="${l.id}" title="Add a component under this">+</button>` : '';
+      let moveBtns = '';
       let acts = '<td class="col-act"></td>';
       if (isAdmin() && !l.via) {
         const baseSibs = D().bom.filter((x) => (x.parentId || null) === (l.parentId || null));
         const canIndent = baseSibs.findIndex((x) => x.id === l.id) > 0;   // has a sibling above to nest under
         const canOutdent = !!l.parentId;
         const out = canOutdent
-          ? `<button class="icon-x" data-act="outdent" data-id="${l.id}" title="Outdent — move up a level">←</button>`
+          ? `<button class="icon-x move" data-act="outdent" data-id="${l.id}" title="Outdent — move up a level">←</button>`
           : '<span class="act-sp"></span>';
         const ind = canIndent
-          ? `<button class="icon-x" data-act="indent" data-id="${l.id}" title="Indent — nest under the row above">→</button>`
+          ? `<button class="icon-x move" data-act="indent" data-id="${l.id}" title="Indent — nest under the row above">→</button>`
           : '<span class="act-sp"></span>';
-        acts = `<td class="col-act">${out}${ind}<button class="icon-x" data-act="delLine" data-id="${l.id}" title="Delete (with children)">×</button></td>`;
+        moveBtns = `<span class="move-group">${out}${ind}</span>`;
+        acts = `<td class="col-act"><button class="icon-x" data-act="delLine" data-id="${l.id}" title="Delete (with children)">×</button></td>`;
       }
       return `<tr class="${isP ? 'parent' : ''}${l.via ? ' muted-row' : ''}">
-        <td class="name-cell" style="padding-left:${6 + depth * 18}px">${caret}${nameInner}${addBtn}</td>
+        <td class="name-cell" style="padding-left:${6 + depth * 18}px">${moveBtns}${caret}${nameInner}${addBtn}</td>
         ${qtyCell}
         ${tiers.map((t) => tierCell(l, t)).join('')}
         ${acts}
