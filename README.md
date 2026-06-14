@@ -2,7 +2,9 @@
 
 **CHARM Band** (Continuous Human Activity Recognition Module) is a screen-free, wrist-worn wearable for janitorial / facilities staff. It passively records wrist motion through a shift so the system can verify what was done — which activities, where, and the route taken — with **zero worker interaction** (no buttons, no app, no checkpoints). Data is uploaded when the band returns to base; analysis is offline.
 
-This repo holds the experiment that proves activities are separable from IMU motion, plus the supporting apps and tooling.
+**AutoChore is the research project for building CHARM Band.** This repo holds the experiment that proves activities are separable from IMU motion, plus the supporting apps and tooling.
+
+> **Note:** The **Costing & Quoting module** currently lives here for convenience but is **not** part of the CHARM Band research — it's a generic, multi-product pricing tool that will be **extracted into its own repo** later.
 
 ## Repository layout
 
