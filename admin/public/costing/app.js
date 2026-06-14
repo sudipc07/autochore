@@ -6,7 +6,7 @@
  * Data model (project.data jsonb):
  *   { tiers:[{id,label,volume}], markup:Number, tierMarkups:{tierId:%}|null,
  *     notes:{tierId:text},
- *     bom:[{id,name,category,notes,costs:{tierId:cost}}],
+ *     bom:[{id,name,notes,qty,parentId,costs:{tierId:unitCost},override:{tierId:cost}}],  // tree; parent override per tier
  *     options:[{id,name,notes,mods:[ {type:'add',line:{...}}
  *                                   | {type:'swap',targetBomId,line:{...}}
  *                                   | {type:'remove',targetBomId}
@@ -41,6 +41,7 @@
     compareIds: [],
     showMargin: true,
     saveState: 'saved',
+    collapsed: new Set(),
   };
   const isAdmin = () => !!(state.me && state.me.role === 'admin');
   const D = () => state.project.data;
@@ -67,7 +68,13 @@
     if (d.tierMarkups === undefined) d.tierMarkups = null;
     d.notes = d.notes && typeof d.notes === 'object' ? d.notes : {};
     d.bom = Array.isArray(d.bom) ? d.bom : [];
-    d.bom.forEach((l) => { if (!l.id) l.id = uid(); if (!l.costs || typeof l.costs !== 'object') l.costs = {}; });
+    d.bom.forEach((l) => {
+      if (!l.id) l.id = uid();
+      if (!l.costs || typeof l.costs !== 'object') l.costs = {};
+      if (l.qty == null) l.qty = 1;                       // qty per line (shared across tiers)
+      if (l.parentId === undefined) l.parentId = null;    // hierarchy
+      if (!l.override || typeof l.override !== 'object') l.override = {}; // per-tier parent overrides
+    });
     d.options = Array.isArray(d.options) ? d.options : [];
     d.options.forEach((o) => { if (!o.id) o.id = uid(); if (!Array.isArray(o.mods)) o.mods = []; });
     d.variants = Array.isArray(d.variants) ? d.variants : [];
@@ -77,26 +84,68 @@
     return d;
   }
 
-  // ---------- compute ----------
+  // ---------- compute (hierarchical BOM, per-tier roll-up / override) ----------
   function effectiveBom(data, enabled) {
-    let bom = data.bom.map((l) => ({ id: l.id, name: l.name, category: l.category, notes: l.notes, costs: Object.assign({}, l.costs), base: true }));
+    let bom = data.bom.map((l) => ({
+      id: l.id, name: l.name, category: l.category, notes: l.notes,
+      qty: l.qty == null ? 1 : num(l.qty),
+      parentId: l.parentId || null,
+      costs: Object.assign({}, l.costs),
+      override: Object.assign({}, l.override || {}),
+      base: true,
+    }));
+    const descIds = (id) => {
+      const out = []; const stack = [id];
+      while (stack.length) { const cur = stack.pop(); for (const x of bom) if (x.parentId === cur) { out.push(x.id); stack.push(x.id); } }
+      return out;
+    };
     for (const opt of data.options) {
       if (!enabled.has(opt.id)) continue;
       for (const mod of opt.mods) {
         if (mod.type === 'add' && mod.line) {
-          bom.push({ id: mod.line.id || uid(), name: mod.line.name, category: mod.line.category, notes: mod.line.notes, costs: Object.assign({}, mod.line.costs || {}), via: opt.name });
+          bom.push({ id: mod.line.id || uid(), name: mod.line.name, category: mod.line.category, notes: mod.line.notes, qty: mod.line.qty == null ? 1 : num(mod.line.qty), parentId: mod.line.parentId || null, costs: Object.assign({}, mod.line.costs || {}), override: {}, via: opt.name });
         } else if (mod.type === 'remove') {
-          bom = bom.filter((l) => l.id !== mod.targetBomId);
+          const kill = new Set([mod.targetBomId, ...descIds(mod.targetBomId)]);
+          bom = bom.filter((l) => !kill.has(l.id));
         } else if (mod.type === 'swap' && mod.line) {
-          bom = bom.map((l) => (l.id === mod.targetBomId ? { id: l.id, name: mod.line.name, category: mod.line.category != null ? mod.line.category : l.category, notes: mod.line.notes, costs: Object.assign({}, mod.line.costs || {}), via: opt.name } : l));
+          const kill = new Set(descIds(mod.targetBomId)); // replacement is self-contained — drop old children
+          bom = bom.filter((l) => !kill.has(l.id)).map((l) => (l.id === mod.targetBomId
+            ? { id: l.id, name: mod.line.name, category: mod.line.category != null ? mod.line.category : l.category, notes: mod.line.notes, qty: l.qty, parentId: l.parentId, costs: Object.assign({}, mod.line.costs || {}), override: {}, via: opt.name }
+            : l));
         } else if (mod.type === 'modify') {
-          bom = bom.map((l) => (l.id === mod.targetBomId ? Object.assign({}, l, { costs: Object.assign({}, l.costs, mod.costs || {}), via: opt.name }) : l));
+          bom = bom.map((l) => {
+            if (l.id !== mod.targetBomId) return l;
+            // diffing a parent updates its override price, not its children (per Addendum 2)
+            const hasKids = bom.some((c) => c.parentId === l.id);
+            if (hasKids) return Object.assign({}, l, { override: Object.assign({}, l.override, mod.costs || {}), via: opt.name });
+            return Object.assign({}, l, { costs: Object.assign({}, l.costs, mod.costs || {}), via: opt.name });
+          });
         }
       }
     }
     return bom;
   }
-  const sumCost = (bom, tierId) => bom.reduce((s, l) => s + num(l.costs[tierId]), 0);
+
+  const childrenOf = (bom, id) => bom.filter((l) => (l.parentId || null) === id);
+  const isParent = (bom, l) => bom.some((c) => (c.parentId || null) === l.id);
+  // Unit cost of a line at a tier: a parent rolls up from children unless that
+  // tier has an override; a leaf (or overridden parent) uses its own number.
+  function lineUnit(bom, l, tierId, depth) {
+    depth = depth || 0;
+    const ov = l.override ? l.override[tierId] : null;
+    const kids = childrenOf(bom, l.id);
+    if (kids.length && (ov == null || ov === '') && depth < 60) {
+      const total = kids.reduce((s, k) => s + lineTotal(bom, k, tierId, depth + 1), 0);
+      const q = num(l.qty) || 1;
+      return total / q;
+    }
+    return ov != null && ov !== '' ? num(ov) : num(l.costs[tierId]);
+  }
+  function lineTotal(bom, l, tierId, depth) {
+    return num(l.qty) * lineUnit(bom, l, tierId, depth);
+  }
+  // Project per-unit BOM cost at a tier = sum of TOP-LEVEL line totals.
+  const sumCost = (bom, tierId) => bom.filter((l) => !l.parentId).reduce((s, l) => s + lineTotal(bom, l, tierId), 0);
   const markupFor = (data, tierId) => (data.tierMarkups && data.tierMarkups[tierId] != null ? data.tierMarkups[tierId] : data.markup);
   function metrics(data, bom, t) {
     const unitCost = sumCost(bom, t.id);
@@ -181,6 +230,7 @@
     state.activeVariantId = null;
     state.scenarioId = null;
     state.compareIds = [];
+    state.collapsed = new Set();
   }
 
   // ================= RENDER =================
@@ -245,23 +295,52 @@
         <input class="vol num" type="number" min="0" step="1" data-edit="tierVol" data-tier="${t.id}" value="${esc(t.volume)}" ${ro} title="Tier volume (units)">
       </th>`).join('');
 
-    const bomRows = effBom.map((l) => {
-      if (l.base) {
-        const costs = tiers.map((t) => `<td class="num"><input class="num cost" type="number" min="0" step="0.01" data-edit="lineCost" data-id="${l.id}" data-tier="${t.id}" value="${l.costs[t.id] != null ? esc(l.costs[t.id]) : ''}" ${ro} placeholder="—"></td>`).join('');
-        return `<tr>
-          <td><input data-edit="lineName" data-id="${l.id}" value="${esc(l.name)}" placeholder="Component" ${ro}></td>
-          <td class="col-cat"><input data-edit="lineCat" data-id="${l.id}" value="${esc(l.category)}" placeholder="Category" ${ro}></td>
-          ${costs}
-          <td class="col-act">${isAdmin() ? `<button class="icon-x" data-act="delLine" data-id="${l.id}" title="Delete line">×</button>` : ''}</td>
-        </tr>`;
+    // depth-first order, honouring collapsed parents
+    const ordered = [];
+    (function walk(pid, depth) {
+      effBom.filter((l) => (l.parentId || null) === pid).forEach((l) => {
+        ordered.push({ l, depth });
+        if (!state.collapsed.has(l.id)) walk(l.id, depth + 1);
+      });
+    })(null, 0);
+
+    const tierCell = (l, t) => {
+      const unit = lineUnit(effBom, l, t.id);
+      const totTxt = num(l.qty) !== 1 ? '= ' + money(lineTotal(effBom, l, t.id)) : '';
+      const tot = `<div class="cell-tot" data-tot="${l.id}-${t.id}">${totTxt}</div>`;
+      if (l.via) return `<td class="num">${money(unit)}${tot}</td>`;          // option-injected, read-only
+      if (isParent(effBom, l)) {
+        const overridden = l.override && l.override[t.id] != null;
+        if (!overridden) return `<td class="num">
+          <span class="mode" data-act="toggleMode" data-id="${l.id}" data-tier="${t.id}" title="Rolls up from children — click to set a fixed price">Σ</span>
+          <span class="roll-val" data-roll="${l.id}-${t.id}">${money(unit)}</span>${tot}</td>`;
+        return `<td class="num">
+          <span class="mode active" data-act="toggleMode" data-id="${l.id}" data-tier="${t.id}" title="Fixed price — click to roll up from children">✎</span>
+          <input class="num cost ov" type="number" min="0" step="0.01" data-edit="override" data-id="${l.id}" data-tier="${t.id}" value="${esc(l.override[t.id])}" ${ro} placeholder="—">${tot}</td>`;
       }
-      // option-injected line (read-only; edit in the Options editor)
-      const costs = tiers.map((t) => `<td class="num">${l.costs[t.id] != null ? money(num(l.costs[t.id])) : '—'}</td>`).join('');
-      return `<tr class="muted-row">
-        <td>${esc(l.name)}<span class="via-tag">${esc(l.via)}</span></td>
-        <td class="col-cat">${esc(l.category || '')}</td>
-        ${costs}
-        <td class="col-act"></td>
+      return `<td class="num">
+        <input class="num cost" type="number" min="0" step="0.01" data-edit="lineCost" data-id="${l.id}" data-tier="${t.id}" value="${l.costs[t.id] != null ? esc(l.costs[t.id]) : ''}" ${ro} placeholder="—">${tot}</td>`;
+    };
+
+    const bomRows = ordered.map(({ l, depth }) => {
+      const isP = isParent(effBom, l);
+      const caret = isP
+        ? `<span class="caret${state.collapsed.has(l.id) ? ' collapsed' : ''}" data-act="toggleCollapse" data-id="${l.id}" title="Collapse / expand">▾</span>`
+        : '<span class="caret-sp"></span>';
+      const nameInner = l.via
+        ? `<span class="opt-line">${esc(l.name)}<span class="via-tag">${esc(l.via)}</span></span>`
+        : `<input data-edit="lineName" data-id="${l.id}" value="${esc(l.name)}" placeholder="${isP ? 'Sub-assembly' : 'Component'}" ${ro}>`;
+      const qtyCell = l.via
+        ? `<td class="num qty">${esc(l.qty)}</td>`
+        : `<td class="num qty"><input class="num" type="number" min="0" step="1" data-edit="qty" data-id="${l.id}" value="${esc(l.qty)}" ${ro}></td>`;
+      const acts = isAdmin() && !l.via
+        ? `<td class="col-act"><button class="icon-x mini" data-act="addChild" data-id="${l.id}" title="Add child component">＋</button><button class="icon-x" data-act="delLine" data-id="${l.id}" title="Delete (with children)">×</button></td>`
+        : '<td class="col-act"></td>';
+      return `<tr class="${isP ? 'parent' : ''}${l.via ? ' muted-row' : ''}">
+        <td class="name-cell" style="padding-left:${6 + depth * 18}px">${caret}${nameInner}</td>
+        ${qtyCell}
+        ${tiers.map((t) => tierCell(l, t)).join('')}
+        ${acts}
       </tr>`;
     }).join('');
 
@@ -294,7 +373,7 @@
 
     <div class="card pad">
       <div class="section-flag">
-        <div><div class="card-title">Bill of materials</div><div class="card-sub">Per-unit cost at each volume tier${anyOpt ? ' · totals include enabled options' : ''}</div></div>
+        <div><div class="card-title">Bill of materials</div><div class="card-sub">Unit cost per tier · nest with ＋ · parents roll up (Σ) or take a fixed price (✎)${anyOpt ? ' · totals include enabled options' : ''}</div></div>
         <div class="markup-bar">
           <label>Markup</label>
           ${data.tierMarkups ? '<span class="muted" style="font-size:13px">per-tier (below)</span>' : `<input class="mk" type="number" step="1" data-edit="markup" value="${esc(data.markup)}" ${ro}>%`}
@@ -302,7 +381,7 @@
         </div>
       </div>
       <table class="bom">
-        <thead><tr><th>Component</th><th class="col-cat">Category</th>${tierHeads}<th class="col-act"></th></tr></thead>
+        <thead><tr><th>Component</th><th class="num qty-h">Qty</th>${tierHeads}<th class="col-act"></th></tr></thead>
         <tbody>${bomRows || `<tr><td colspan="${colspan}" class="muted" style="padding:18px;text-align:center">No line items yet.${isAdmin() ? ' Add the first below.' : ''}</td></tr>`}</tbody>
         <tfoot>
           ${anyOpt ? `<tr class="compute"><td class="rowlabel">Base unit cost</td><td></td>${baseRow}<td></td></tr>
@@ -472,6 +551,16 @@
     const data = D();
     const baseBom = effectiveBom(data, new Set());
     const effBom = effectiveBom(data, state.enabled);
+    // per-line roll-up values + item totals
+    effBom.forEach((l) => {
+      data.tiers.forEach((t) => {
+        const rv = document.querySelector(`[data-roll="${l.id}-${t.id}"]`);
+        if (rv) rv.textContent = money(lineUnit(effBom, l, t.id));
+        const tt = document.querySelector(`[data-tot="${l.id}-${t.id}"]`);
+        if (tt) tt.textContent = num(l.qty) !== 1 ? '= ' + money(lineTotal(effBom, l, t.id)) : '';
+      });
+    });
+    // computed footer
     const set = (k, t, txt) => { const c = document.querySelector(`[data-c="${k}-${t.id}"]`); if (c) c.textContent = txt; };
     data.tiers.forEach((t) => {
       const mb = metrics(data, baseBom, t);
@@ -496,6 +585,8 @@
     else if (ed === 'lineName') { line(e.target.dataset.id).name = e.target.value; markDirty(); }
     else if (ed === 'lineCat') { line(e.target.dataset.id).category = e.target.value; markDirty(); }
     else if (ed === 'lineCost') { line(e.target.dataset.id).costs[e.target.dataset.tier] = num(e.target.value); paintComputed(); markDirty(); }
+    else if (ed === 'qty') { line(e.target.dataset.id).qty = num(e.target.value); paintComputed(); markDirty(); }
+    else if (ed === 'override') { const l = line(e.target.dataset.id); l.override = l.override || {}; l.override[e.target.dataset.tier] = num(e.target.value); paintComputed(); markDirty(); }
     else if (ed === 'markup') { data.markup = num(e.target.value); paintComputed(); markDirty(); }
     else if (ed === 'tierMarkup') { (data.tierMarkups = data.tierMarkups || {})[e.target.dataset.tier] = num(e.target.value); paintComputed(); markDirty(); }
     else if (ed === 'note') { data.notes[e.target.dataset.tier] = e.target.value; markDirty(); }
@@ -526,8 +617,20 @@
       case 'newProject': openProjectModal(); break;
       case 'renameProject': openProjectModal(state.project); break;
       case 'delProject': confirmDeleteProject(); break;
-      case 'addLine': data.bom.push({ id: uid(), name: '', category: '', notes: '', costs: {} }); markDirty(); render(); break;
-      case 'delLine': data.bom = data.bom.filter((l) => l.id !== id); markDirty(); render(); break;
+      case 'addLine': data.bom.push({ id: uid(), name: '', costs: {}, qty: 1, parentId: null, override: {} }); markDirty(); render(); break;
+      case 'addChild': data.bom.push({ id: uid(), name: '', costs: {}, qty: 1, parentId: id, override: {} }); state.collapsed.delete(id); markDirty(); render(); break;
+      case 'toggleCollapse': state.collapsed.has(id) ? state.collapsed.delete(id) : state.collapsed.add(id); render(); break;
+      case 'toggleMode': {
+        const l = line(id); const tid = b.dataset.tier; l.override = l.override || {};
+        if (l.override[tid] != null) { delete l.override[tid]; }                  // → roll up from children
+        else { const eff = effectiveBom(data, state.enabled); const cur = lineUnit(eff, eff.find((x) => x.id === id) || l, tid); l.override[tid] = Math.round(cur * 100) / 100; } // → fix price (seed with current)
+        markDirty(); render(); break;
+      }
+      case 'delLine': {
+        const kill = new Set([id]);
+        for (let changed = true; changed; ) { changed = false; data.bom.forEach((l) => { if (l.parentId && kill.has(l.parentId) && !kill.has(l.id)) { kill.add(l.id); changed = true; } }); }
+        data.bom = data.bom.filter((l) => !kill.has(l.id)); markDirty(); render(); break;
+      }
       case 'addTier': data.tiers.push({ id: uid(), label: 'New tier', volume: 0 }); markDirty(); render(); break;
       case 'delTier': if (data.tiers.length > 1) { data.tiers = data.tiers.filter((t) => t.id !== id); markDirty(); render(); } break;
       case 'addOption': openOptionModal(null); break;
@@ -664,7 +767,16 @@
   }
   function renderOptionModal() {
     const data = D();
-    const lineOpts = (sel) => data.bom.map((l) => `<option value="${esc(l.id)}"${sel === l.id ? ' selected' : ''}>${esc(l.name || '(unnamed)')}</option>`).join('');
+    const lineOpts = (sel) => {
+      const out = [];
+      (function walk(pid, depth) {
+        data.bom.filter((l) => (l.parentId || null) === pid).forEach((l) => {
+          out.push(`<option value="${esc(l.id)}"${sel === l.id ? ' selected' : ''}>${'— '.repeat(depth)}${esc(l.name || '(unnamed)')}</option>`);
+          walk(l.id, depth + 1);
+        });
+      })(null, 0);
+      return out.join('');
+    };
     const tierCostInputs = (costs, kind) => `<div class="mod-costs">` + data.tiers.map((t) => `<div class="cc"><label>${esc(t.label)}</label><input type="number" step="0.01" data-mc="${kind}" data-tier="${t.id}" value="${costs && costs[t.id] != null ? esc(costs[t.id]) : ''}" placeholder="$"></div>`).join('') + `</div>`;
 
     const modRows = optDraft.mods.map((m, i) => {
