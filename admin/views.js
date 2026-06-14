@@ -25,6 +25,7 @@ function layout(title, body) {
     <nav class="nav">
       <a href="/">Sessions</a>
       <a href="/devices">Devices</a>
+      <a href="/costing/">Costing</a>
     </nav>
     <form method="post" action="/logout" class="logout"><button type="submit">Log out</button></form>
   </header>

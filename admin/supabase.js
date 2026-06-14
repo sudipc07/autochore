@@ -26,6 +26,28 @@ async function restGet(path, query) {
   return res.json();
 }
 
+// Generic write helper (POST/PATCH/DELETE). `returning`: 'representation'
+// (default, returns the rows) or 'minimal' (returns null).
+async function restWrite(method, path, query, body, { returning = 'representation' } = {}) {
+  const res = await fetch(restURL(path, query), {
+    method,
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: `return=${returning}`,
+    },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`Supabase ${method} ${path} ${res.status}: ${await res.text()}`);
+  if (returning === 'minimal') return null;
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+const restPost = (path, body, opts) => restWrite('POST', path, null, body, opts);
+const restPatch = (path, query, body, opts) => restWrite('PATCH', path, query, body, opts);
+const restDelete = (path, query) => restWrite('DELETE', path, query, undefined, { returning: 'minimal' });
+
 // Column set for the list view — deliberately excludes the heavy jsonb arrays.
 const LIST_COLUMNS =
   'id,user_id,chore_label,start_time,end_time,sample_count,floor_summary,notes,created_at';
@@ -108,6 +130,41 @@ async function sessionCountsByUser() {
   return counts;
 }
 
+// ── Costing projects ─────────────────────────────────────────────────────────
+async function listCostingProjects() {
+  return restGet('costing_projects', {
+    select: 'id,name,description,updated_at,created_at',
+    order: 'created_at.asc',
+  });
+}
+
+async function getCostingProject(id) {
+  const rows = await restGet('costing_projects', { select: '*', id: `eq.${id}`, limit: 1 });
+  return rows[0] || null;
+}
+
+async function createCostingProject({ name, description, data }) {
+  const rows = await restPost('costing_projects', {
+    name,
+    description: description || null,
+    data: data || {},
+  });
+  return rows && rows[0];
+}
+
+async function updateCostingProject(id, { name, description, data }) {
+  const patch = { updated_at: new Date().toISOString() };
+  if (name !== undefined) patch.name = name;
+  if (description !== undefined) patch.description = description;
+  if (data !== undefined) patch.data = data;
+  const rows = await restPatch('costing_projects', { id: `eq.${id}` }, patch);
+  return rows && rows[0];
+}
+
+async function deleteCostingProject(id) {
+  await restDelete('costing_projects', { id: `eq.${id}` });
+}
+
 module.exports = {
   listSessions,
   getSession,
@@ -116,4 +173,9 @@ module.exports = {
   sessionCountsByUser,
   listSessionsMeta,
   setArchived,
+  listCostingProjects,
+  getCostingProject,
+  createCostingProject,
+  updateCostingProject,
+  deleteCostingProject,
 };

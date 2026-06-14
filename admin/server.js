@@ -26,6 +26,11 @@ const {
   sessionCountsByUser,
   listSessionsMeta,
   setArchived,
+  listCostingProjects,
+  getCostingProject,
+  createCostingProject,
+  updateCostingProject,
+  deleteCostingProject,
 } = require('./supabase');
 const { motionSamplesToCSV } = require('./csv');
 const { analyzeMotion, motionFeatures, choreSummary } = require('./analysis');
@@ -63,11 +68,15 @@ async function computeChoreSummary() {
 
 const PORT = process.env.PORT || 3003;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'change-me';
+// Optional second code for view-only access (can present/toggle, can't edit/save).
+// Leave unset to keep a single password = full access, exactly as before.
+const VIEWER_PASSWORD = process.env.VIEWER_PASSWORD || '';
 const SESSION_SECRET = process.env.SESSION_SECRET || 'dev-insecure-secret';
 
 const app = express();
 app.disable('x-powered-by');
 app.use(express.urlencoded({ extended: false }));
+app.use(express.json({ limit: '4mb' })); // costing project payloads (jsonb)
 app.use(
   cookieSession({
     name: 'autochore',
@@ -88,6 +97,16 @@ function requireAuth(req, res, next) {
   return res.redirect('/login');
 }
 
+// Role of the current session. Sessions created before roles existed (no role
+// field) default to admin — same full access they had before.
+const sessionRole = (req) => (req.session && req.session.role) || 'admin';
+
+function requireAdmin(req, res, next) {
+  if (req.session && req.session.authed && sessionRole(req) === 'admin') return next();
+  if (req.path.startsWith('/api/')) return res.status(403).json({ error: 'forbidden' });
+  return res.status(403).send('Forbidden — admin access required.');
+}
+
 // --- Auth ---
 app.get('/login', (req, res) => {
   if (req.session && req.session.authed) return res.redirect('/');
@@ -95,8 +114,15 @@ app.get('/login', (req, res) => {
 });
 
 app.post('/login', (req, res) => {
-  if (req.body.password === ADMIN_PASSWORD) {
+  const pw = req.body.password;
+  if (pw && pw === ADMIN_PASSWORD) {
     req.session.authed = true;
+    req.session.role = 'admin';
+    return res.redirect('/');
+  }
+  if (VIEWER_PASSWORD && pw === VIEWER_PASSWORD) {
+    req.session.authed = true;
+    req.session.role = 'viewer';
     return res.redirect('/');
   }
   res.status(401).send(loginPage('Wrong password.'));
@@ -105,6 +131,11 @@ app.post('/login', (req, res) => {
 app.post('/logout', (req, res) => {
   req.session = null;
   res.redirect('/login');
+});
+
+// Current role (so the costing client can hide edit controls for viewers).
+app.get('/api/me', requireAuth, (req, res) => {
+  res.json({ role: sessionRole(req) });
 });
 
 // --- Pages ---
@@ -180,6 +211,57 @@ app.get('/api/sessions/:id/csv', requireAuth, async (req, res, next) => {
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', `attachment; filename="${fname}"`);
     res.send(csv);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// --- Costing & Quoting module ---
+// The shell is the static public/costing/index.html (served by express.static).
+// Data is gated below; the client redirects to /login if /api/me is 401.
+app.get('/api/costing/projects', requireAuth, async (req, res, next) => {
+  try {
+    res.json(await listCostingProjects());
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.get('/api/costing/projects/:id', requireAuth, async (req, res, next) => {
+  try {
+    const p = await getCostingProject(req.params.id);
+    if (!p) return res.status(404).json({ error: 'not found' });
+    res.json(p);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post('/api/costing/projects', requireAuth, requireAdmin, async (req, res, next) => {
+  try {
+    const { name, description, data } = req.body || {};
+    if (!name) return res.status(400).json({ error: 'name required' });
+    res.status(201).json(await createCostingProject({ name, description, data }));
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.put('/api/costing/projects/:id', requireAuth, requireAdmin, async (req, res, next) => {
+  try {
+    const { name, description, data } = req.body || {};
+    const updated = await updateCostingProject(req.params.id, { name, description, data });
+    if (!updated) return res.status(404).json({ error: 'not found' });
+    res.json(updated);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.delete('/api/costing/projects/:id', requireAuth, requireAdmin, async (req, res, next) => {
+  try {
+    await deleteCostingProject(req.params.id);
+    res.json({ ok: true });
   } catch (err) {
     next(err);
   }
