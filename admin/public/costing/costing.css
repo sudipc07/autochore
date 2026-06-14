@@ -97,6 +97,11 @@ a { color: inherit; text-decoration: none; }
 .col-cat { width: 150px; }
 .col-act { width: 44px; text-align: center; white-space: nowrap; }
 .act-sp { display: inline-block; width: 22px; }
+.drag-handle { cursor: grab; color: #cbd5e1; user-select: none; font-size: 13px; padding: 0 4px; flex-shrink: 0; }
+.drag-handle:hover { color: var(--muted); }
+.drag-handle:active { cursor: grabbing; }
+.bom tr.drop-before > td { box-shadow: inset 0 2px 0 0 var(--indigo); }
+.bom tr.drop-after > td { box-shadow: inset 0 -2px 0 0 var(--indigo); }
 .move-group { display: inline-flex; flex-shrink: 0; margin-right: 2px; }
 .move-group .move { color: var(--faint); }
 .move-group .move:hover { color: var(--indigo); background: var(--indigo-50); }

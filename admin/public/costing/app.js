@@ -367,8 +367,9 @@
         moveBtns = `<span class="move-group">${out}${ind}</span>`;
         acts = `<td class="col-act"><button class="icon-x" data-act="delLine" data-id="${l.id}" title="Delete (with children)">×</button></td>`;
       }
-      return `<tr class="${isP ? 'parent' : ''}${l.via ? ' muted-row' : ''}">
-        <td class="name-cell" style="padding-left:${6 + depth * 18}px">${moveBtns}${caret}${nameInner}${addBtn}</td>
+      const dragHandle = isAdmin() && !l.via ? `<span class="drag-handle" draggable="true" data-drag="${l.id}" title="Drag to reorder (same level only)">⠿</span>` : '';
+      return `<tr class="${isP ? 'parent' : ''}${l.via ? ' muted-row' : ''}"${l.via ? '' : ` data-row="${l.id}"`}>
+        <td class="name-cell" style="padding-left:${6 + depth * 18}px">${dragHandle}${moveBtns}${caret}${nameInner}${addBtn}</td>
         ${qtyCell}
         ${tiers.map((t) => tierCell(l, t)).join('')}
         ${acts}
@@ -636,6 +637,46 @@
       render();
     }
   });
+
+  // ---------- drag to reorder (same level only — never changes indent) ----------
+  let dragId = null;
+  const clearDropMarkers = () => document.querySelectorAll('.drop-before,.drop-after').forEach((el) => el.classList.remove('drop-before', 'drop-after'));
+  const canDrop = (srcId, tgtId) => {
+    if (!srcId || srcId === tgtId) return false;
+    const s = line(srcId), t = line(tgtId);
+    return !!(s && t) && (s.parentId || null) === (t.parentId || null); // same parent = same level
+  };
+  app.addEventListener('dragstart', (e) => {
+    const h = e.target.closest('[data-drag]');
+    if (!h) return;
+    dragId = h.dataset.drag;
+    if (e.dataTransfer) { e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', dragId); } catch (_) {} }
+  });
+  app.addEventListener('dragover', (e) => {
+    if (!dragId) return;
+    const tr = e.target.closest('tr[data-row]');
+    clearDropMarkers();
+    if (!tr || !canDrop(dragId, tr.dataset.row)) return; // not a valid target → no drop allowed
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+    const r = tr.getBoundingClientRect();
+    tr.classList.add(e.clientY - r.top < r.height / 2 ? 'drop-before' : 'drop-after');
+  });
+  app.addEventListener('drop', (e) => {
+    const tr = dragId ? e.target.closest('tr[data-row]') : null;
+    clearDropMarkers();
+    if (tr && canDrop(dragId, tr.dataset.row)) {
+      e.preventDefault();
+      const r = tr.getBoundingClientRect();
+      const before = e.clientY - r.top < r.height / 2;
+      const entry = D().bom.find((x) => x.id === dragId);
+      const rest = D().bom.filter((x) => x.id !== dragId);
+      const ti = rest.findIndex((x) => x.id === tr.dataset.row);
+      if (ti >= 0 && entry) { rest.splice(before ? ti : ti + 1, 0, entry); D().bom = rest; markDirty(); render(); }
+    }
+    dragId = null;
+  });
+  app.addEventListener('dragend', () => { clearDropMarkers(); dragId = null; });
 
   app.addEventListener('click', (e) => {
     const b = e.target.closest('[data-act]');
