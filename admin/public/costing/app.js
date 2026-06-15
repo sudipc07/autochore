@@ -52,11 +52,7 @@
   // ---------- data normalize ----------
   function blankData() {
     return {
-      tiers: [
-        { id: 't100', label: '100 units', volume: 100 },
-        { id: 't1000', label: '1,000 units', volume: 1000 },
-        { id: 't10000', label: '10,000 units', volume: 10000 },
-      ],
+      tiers: [{ id: 't1', label: '', volume: 1000 }],
       markup: 40, tierMarkups: null, notes: {},
       bom: [], options: [], variants: [], scenarios: [],
     };
@@ -383,10 +379,7 @@
     const baseRow = tiers.map((t) => cell('baseunit', t, money(metrics(data, baseBom, t).unitCost))).join('');
     const deltaRow = tiers.map((t) => { const d = metrics(data, effBom, t).unitCost - metrics(data, baseBom, t).unitCost; return cell('optdelta', t, d ? '+' + money(d) : '—'); }).join('');
     const unitRow = tiers.map((t) => cell('unitcost', t, money(metrics(data, effBom, t).unitCost))).join('');
-    const markupRow = tiers.map((t) => {
-      if (data.tierMarkups) return `<td class="num markup-cell"><input class="num" type="number" step="1" data-edit="tierMarkup" data-tier="${t.id}" value="${esc(markupFor(data, t.id))}" ${ro}>%</td>`;
-      return `<td class="num" data-c="mk-${t.id}">${pct(metrics(data, effBom, t).markup / 100)}</td>`;
-    }).join('');
+    const markupRow = tiers.map((t) => `<td class="num markup-cell"><input class="num" type="text" inputmode="decimal" data-edit="tierMarkup" data-tier="${t.id}" value="${esc(markupFor(data, t.id))}" ${ro}>%</td>`).join('');
     const sellRow = tiers.map((t) => cell('sell', t, money(metrics(data, effBom, t).sell))).join('');
     const totalRow = tiers.map((t) => cell('total', t, money0(metrics(data, effBom, t).total))).join('');
     const marginRow = tiers.map((t) => { const m = metrics(data, effBom, t); return cell('marginpct', t, pct(m.marginPct) + ' · ' + money(m.marginAbs)); }).join('');
@@ -407,12 +400,7 @@
 
     <div class="card pad">
       <div class="section-flag">
-        <div><div class="card-title">Bill of materials</div><div class="card-sub">Unit cost per tier · nest with ＋ · parents roll up (Σ) or take a fixed price (✎)${anyOpt ? ' · totals include enabled options' : ''}</div></div>
-        <div class="markup-bar">
-          <label>Markup</label>
-          ${data.tierMarkups ? '<span class="muted" style="font-size:13px">per-tier (below)</span>' : `<input class="mk" type="number" step="1" data-edit="markup" value="${esc(data.markup)}" ${ro}>%`}
-          <label class="checkline"><input type="checkbox" data-toggle="perTier" ${data.tierMarkups ? 'checked' : ''} ${ro}> per-tier markup</label>
-        </div>
+        <div><div class="card-title">Bill of materials</div><div class="card-sub">Unit cost per tier · nest with ＋ · parents roll up (Σ) or take a fixed price (✎) · set markup per tier in the row below${anyOpt ? ' · totals include enabled options' : ''}</div></div>
       </div>
       <table class="bom">
         <thead><tr><th>Component</th><th class="num qty-h">Qty</th>${tierHeads}<th class="col-act">${isAdmin() ? '<button class="addtier" data-act="addTier" title="Add a volume tier">+ tier</button>' : ''}</th></tr></thead>
@@ -625,6 +613,7 @@
   app.addEventListener('change', (e) => {
     const t = e.target;
     if (t.id === 'projectSelect') { selectProject(t.value).then(render); return; }
+    if (t.dataset.edit === 'tierVol') { sortTiers(); render(); return; } // re-order columns by size once a volume is committed
     const tg = t.dataset.toggle;
     if (tg === 'opt') { t.checked ? state.enabled.add(t.dataset.id) : state.enabled.delete(t.dataset.id); state.activeVariantId = null; render(); }
     else if (tg === 'margin') { state.showMargin = t.checked; }
@@ -713,7 +702,7 @@
         for (let changed = true; changed; ) { changed = false; data.bom.forEach((l) => { if (l.parentId && kill.has(l.parentId) && !kill.has(l.id)) { kill.add(l.id); changed = true; } }); }
         data.bom = data.bom.filter((l) => !kill.has(l.id)); markDirty(); render(); break;
       }
-      case 'addTier': data.tiers.push({ id: uid(), label: 'New tier', volume: 0 }); markDirty(); render(); break;
+      case 'addTier': openCopyTierModal(); break;
       case 'delTier': if (data.tiers.length > 1) { data.tiers = data.tiers.filter((t) => t.id !== id); markDirty(); render(); } break;
       case 'addOption': openOptionModal(null); break;
       case 'editOption': openOptionModal(id); break;
@@ -728,6 +717,32 @@
   });
 
   // ---------- scenarios / variants ops ----------
+  const sortTiers = () => D().tiers.sort((a, b) => num(a.volume) - num(b.volume)); // columns in size order
+  function copyTier(srcId) {
+    const data = D();
+    const src = data.tiers.find((t) => t.id === srcId);
+    if (!src) return;
+    const nid = uid();
+    data.tiers.push({ id: nid, label: '', volume: src.volume });
+    data.tierMarkups = data.tierMarkups || {};
+    data.tierMarkups[nid] = markupFor(data, srcId);
+    data.bom.forEach((l) => {
+      if (l.costs && l.costs[srcId] != null) l.costs[nid] = l.costs[srcId];
+      if (l.override && l.override[srcId] != null) l.override[nid] = l.override[srcId];
+    });
+    sortTiers();
+    markDirty();
+  }
+  function openCopyTierModal() {
+    const data = D();
+    const opts = data.tiers.map((t) => `<option value="${esc(t.id)}">${esc(tierName(t))}</option>`).join('');
+    const back = openModal(`<h2>Add a tier</h2>
+      <p class="msub">Copies an existing tier — its volume, all line costs and markup — so you only adjust what changes. Then edit the new volume; columns auto-sort by size.</p>
+      <label>Copy from</label>
+      <select id="copySrc">${opts}</select>
+      <div class="modal-actions"><button class="b ghost" data-modal-close>Cancel</button><button class="b" id="copyGo">Add copy</button></div>`);
+    back.querySelector('#copyGo').addEventListener('click', () => { copyTier(back.querySelector('#copySrc').value); closeModal(); render(); });
+  }
   function togglePerTier(on) {
     const data = D();
     if (on) { data.tierMarkups = {}; data.tiers.forEach((t) => { data.tierMarkups[t.id] = data.markup; }); }
