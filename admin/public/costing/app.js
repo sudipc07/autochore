@@ -369,7 +369,7 @@
         acts = `<td class="col-act"><button class="icon-x" data-act="delLine" data-id="${l.id}" title="Delete (with children)">×</button></td>`;
       }
       const dragHandle = isAdmin() && !l.via ? `<span class="drag-handle" draggable="true" data-drag="${l.id}" title="Drag to reorder (same level only)">⠿</span>` : '';
-      return `<tr class="${isP ? 'parent' : ''}${l.via ? ' muted-row' : ''}"${l.via ? '' : ` data-row="${l.id}"`}>
+      return `<tr class="${depth === 0 ? 'toplevel ' : ''}${isP ? 'parent' : ''}${l.via ? ' muted-row' : ''}"${l.via ? '' : ` data-row="${l.id}"`}>
         <td class="name-cell" style="padding-left:${6 + depth * 18}px">${dragHandle}${moveBtns}${caret}${nameInner}${addBtn}</td>
         ${qtyCell}
         ${tiers.map((t) => tierCell(l, t)).join('')}
