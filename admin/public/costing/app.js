@@ -402,7 +402,7 @@
       <div class="section-flag">
         <div><div class="card-title">Bill of materials</div><div class="card-sub">Unit cost per tier · nest with ＋ · parents roll up (Σ) or take a fixed price (✎) · set markup per tier in the row below${anyOpt ? ' · totals include enabled options' : ''}</div></div>
       </div>
-      <table class="bom">
+      <div class="bom-scroll"><table class="bom">
         <thead><tr><th>Component</th><th class="num qty-h">Qty</th>${tierHeads}<th class="col-act">${isAdmin() ? '<button class="addtier" data-act="addTier" title="Add a volume tier">+ tier</button>' : ''}</th></tr></thead>
         <tbody>${bomRows || `<tr><td colspan="${colspan}" class="muted" style="padding:18px;text-align:center">No line items yet.</td></tr>`}${isAdmin() ? `<tr class="addrow"><td colspan="${colspan}"><button class="add-row" data-act="addLine">+ Add line item</button></td></tr>` : ''}</tbody>
         <tfoot>
@@ -414,7 +414,7 @@
           <tr class="compute"><td class="rowlabel big">Total project</td><td></td>${totalRow}<td></td></tr>
           <tr class="compute"><td class="rowlabel">Margin</td><td></td>${marginRow}<td></td></tr>
         </tfoot>
-      </table>
+      </table></div>
     </div>
 
     ${optionsCard()}
