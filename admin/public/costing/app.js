@@ -28,6 +28,7 @@
   const money0 = (n) => (isFinite(n) ? '$' + Math.round(Number(n)).toLocaleString('en-US') : '—');
   const pct = (n) => (isFinite(n) ? (n * 100).toFixed(1) + '%' : '—');
   const clone = (o) => JSON.parse(JSON.stringify(o));
+  const tierName = (t) => Number(t.volume).toLocaleString('en-US') + ' units'; // single source of truth: the volume
 
   // ---------- state ----------
   const state = {
@@ -306,11 +307,11 @@
     const anyOpt = state.enabled.size > 0;
 
     const tierHeads = tiers.map((t) => `<th class="num tier-h">
-        <div class="th-row">
-          <input class="lbl" data-edit="tierLabel" data-tier="${t.id}" value="${esc(t.label)}" ${ro} title="Tier label (shown in Presenter)">
+        <div class="vol-line">
+          <input class="vol num" type="text" inputmode="numeric" data-edit="tierVol" data-tier="${t.id}" value="${esc(t.volume)}" ${ro} title="Tier volume">
+          <span class="vol-unit">units</span>
           ${isAdmin() && tiers.length > 1 ? `<button class="icon-x" data-act="delTier" data-id="${t.id}" title="Remove tier">×</button>` : ''}
         </div>
-        <input class="vol num" type="text" inputmode="numeric" data-edit="tierVol" data-tier="${t.id}" value="${esc(t.volume)}" ${ro} title="Tier volume (units)">
       </th>`).join('');
 
     // depth-first order, honouring collapsed parents
@@ -512,11 +513,8 @@
       const noteEl = isAdmin()
         ? `<textarea class="note" data-edit="note" data-tier="${t.id}" placeholder="Lead time, terms, notes…">${esc(noteVal)}</textarea>`
         : `<div class="note-static">${esc(noteVal) || '<span class="muted">—</span>'}</div>`;
-      const volLine = Number(t.volume).toLocaleString('en-US') + ' units';
-      const showVol = String(t.label).trim() !== volLine;
       return `<div class="pres-col">
-        <div class="tier-name">${esc(t.label)}</div>
-        ${showVol ? `<div class="tier-vol">${volLine}</div>` : '<div class="tier-vol">&nbsp;</div>'}
+        <div class="tier-name">${esc(tierName(t))}</div>
         <div class="hero-label">Price per unit</div>
         <div class="hero">$${dollars.toLocaleString('en-US')}<span class="cents">.${cents}</span></div>
         <div class="kv"><span class="k">Total project</span><span class="v">${money0(m.total)}</span></div>
@@ -558,7 +556,7 @@
           const mb = metrics(data, baseBom, t);
           const d = m.sell - mb.sell;
           const delta = v.id !== '__base__' && d ? `<span class="cmp-delta"> (${d > 0 ? '+' : ''}${money(d)})</span>` : '';
-          return `<tr class="hero"><td>${esc(t.label)}</td><td>${money(m.sell)}${delta}</td></tr>
+          return `<tr class="hero"><td>${esc(tierName(t))}</td><td>${money(m.sell)}${delta}</td></tr>
             <tr><td>unit cost</td><td>${money(m.unitCost)}</td></tr>
             <tr><td>total project</td><td>${money0(m.total)}</td></tr>
             <tr><td>margin</td><td>${pct(m.marginPct)}</td></tr>`;
