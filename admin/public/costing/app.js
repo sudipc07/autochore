@@ -310,7 +310,7 @@
           <input class="lbl" data-edit="tierLabel" data-tier="${t.id}" value="${esc(t.label)}" ${ro} title="Tier label (shown in Presenter)">
           ${isAdmin() && tiers.length > 1 ? `<button class="icon-x" data-act="delTier" data-id="${t.id}" title="Remove tier">×</button>` : ''}
         </div>
-        <input class="vol num" type="number" min="0" step="1" data-edit="tierVol" data-tier="${t.id}" value="${esc(t.volume)}" ${ro} title="Tier volume (units)">
+        <input class="vol num" type="text" inputmode="numeric" data-edit="tierVol" data-tier="${t.id}" value="${esc(t.volume)}" ${ro} title="Tier volume (units)">
       </th>`).join('');
 
     // depth-first order, honouring collapsed parents
@@ -414,8 +414,8 @@
         </div>
       </div>
       <table class="bom">
-        <thead><tr><th>Component</th><th class="num qty-h">Qty</th>${tierHeads}<th class="col-act"></th></tr></thead>
-        <tbody>${bomRows || `<tr><td colspan="${colspan}" class="muted" style="padding:18px;text-align:center">No line items yet.${isAdmin() ? ' Add the first below.' : ''}</td></tr>`}</tbody>
+        <thead><tr><th>Component</th><th class="num qty-h">Qty</th>${tierHeads}<th class="col-act">${isAdmin() ? '<button class="addtier" data-act="addTier" title="Add a volume tier">+ tier</button>' : ''}</th></tr></thead>
+        <tbody>${bomRows || `<tr><td colspan="${colspan}" class="muted" style="padding:18px;text-align:center">No line items yet.</td></tr>`}${isAdmin() ? `<tr class="addrow"><td colspan="${colspan}"><button class="add-row" data-act="addLine">+ Add line item</button></td></tr>` : ''}</tbody>
         <tfoot>
           ${anyOpt ? `<tr class="compute"><td class="rowlabel">Base unit cost</td><td></td>${baseRow}<td></td></tr>
           <tr class="compute"><td class="rowlabel">+ Options</td><td></td>${deltaRow}<td></td></tr>` : ''}
@@ -426,7 +426,6 @@
           <tr class="compute"><td class="rowlabel">Margin</td><td></td>${marginRow}<td></td></tr>
         </tfoot>
       </table>
-      ${isAdmin() ? '<div class="toolbar"><button class="b ghost" data-act="addLine">+ Add line item</button><button class="b ghost" data-act="addTier">+ Add tier</button></div>' : ''}
     </div>
 
     ${optionsCard()}

@@ -95,7 +95,12 @@ a { color: inherit; text-decoration: none; }
 .bom input.num { text-align: right; font-variant-numeric: tabular-nums; }
 .bom input.cost::placeholder { color: #cbd5e1; }
 .col-cat { width: 150px; }
-.col-act { width: 44px; text-align: center; white-space: nowrap; }
+.col-act { width: 62px; text-align: center; white-space: nowrap; vertical-align: middle; }
+.addtier { border: 1px solid var(--border); background: var(--surface); color: var(--indigo); font-family: inherit; font-weight: 600; font-size: 11px; padding: 4px 8px; border-radius: 6px; cursor: pointer; white-space: nowrap; }
+.addtier:hover { background: var(--indigo-50); }
+.bom tr.addrow td { border-top: 1px dashed var(--border); border-bottom: none; padding: 4px 6px; }
+.add-row { border: none; background: transparent; color: var(--indigo); font-family: inherit; font-weight: 600; font-size: 13px; cursor: pointer; padding: 8px 6px; border-radius: 6px; }
+.add-row:hover { background: var(--indigo-50); }
 .act-sp { display: inline-block; width: 22px; }
 .drag-handle { cursor: grab; color: #cbd5e1; user-select: none; font-size: 13px; padding: 0 4px; flex-shrink: 0; }
 .drag-handle:hover { color: var(--muted); }
