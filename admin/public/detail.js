@@ -244,6 +244,11 @@
     const accelH2 = [...document.querySelectorAll('h2')].find((h) => /Accelerometer/.test(h.textContent));
     if (accelH2) main.insertBefore(sec, accelH2); else main.appendChild(sec);
 
+    // "Samples" only counts IMU/motion; clarify it and surface the GPS fix count.
+    document.querySelectorAll('dl.meta dt').forEach((dt) => { if (dt.textContent.trim() === 'Samples') dt.textContent = 'Motion samples'; });
+    const metaDl = document.querySelector('dl.meta');
+    if (metaDl) { const d = document.createElement('div'); d.innerHTML = '<dt>GPS fixes</dt><dd>' + gps.length + '</dd>'; metaDl.appendChild(d); }
+
     function draw() {
       const pts = gps.map((g) => [g.lat, g.lon]);
       // scroll-wheel zoom off by default so it never traps page scrolling;
