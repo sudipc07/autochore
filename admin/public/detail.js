@@ -246,7 +246,11 @@
 
     function draw() {
       const pts = gps.map((g) => [g.lat, g.lon]);
-      const map = L.map('gpsMap');
+      // scroll-wheel zoom off by default so it never traps page scrolling;
+      // click the map to enable it, moving off the map disables it again.
+      const map = L.map('gpsMap', { scrollWheelZoom: false });
+      map.on('click', () => map.scrollWheelZoom.enable());
+      map.on('mouseout', () => map.scrollWheelZoom.disable());
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
       if (pts.length > 1) L.polyline(pts, { color: '#4f8cff', weight: 3 }).addTo(map);
       pts.forEach((p, i) => {
