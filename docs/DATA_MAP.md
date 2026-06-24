@@ -34,6 +34,7 @@ A reference map of all collected IMU data: where it comes from, the schema, ever
 | `floor_summary` | `{floors_ascended, floors_descended}` |
 | `motion_samples` | inline sample array (older rows) or null |
 | `altitude_samples` | `[{t, relative_altitude}]` |
+| `gps_samples` | `[{t, lat, lon, alt?, speed?, course?, fix?}]` — decimal degrees (CHARM band) |
 | `samples_path` | file in `raw-sessions` (newer rows) |
 | `archived` | bad/superseded flag — filter `false` for clean data |
 

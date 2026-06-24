@@ -73,6 +73,7 @@ POST https://jehrccwdwrjybzzksgmr.supabase.co/rest/v1/sessions
 | `sample_count` | integer | ✅ | length of `motion_samples` |
 | `motion_samples` | array | ✅ | see below |
 | `altitude_samples` | array | optional | omit if no barometer (defaults to `[]`) |
+| `gps_samples` | array | optional | GPS fixes; omit if no GPS (defaults to `[]`) |
 | `floor_summary` | object | optional | omit if no floor counting (defaults to `{}`) |
 | `notes` | string | optional | free text |
 
@@ -116,6 +117,13 @@ The Watch records a rich per-sample set. Your board only needs to send what it h
 { "t": 1000, "relative_altitude": 2.7 }
 ```
 Relative altitude in metres vs. the session start.
+
+### `gps_samples` element (optional)
+
+```json
+{ "t": 12000, "lat": -33.843692, "lon": 150.959157, "alt": 41.2, "speed": 0.0, "fix": "A" }
+```
+GPS fixes parsed to **decimal degrees** — convert NMEA `ddmm.mmmm` → `dd.dddddd`, with **S/W negative** (don't send raw NMEA sentences). `t` = ms since session start. `lat`/`lon` are the core; `alt` (m), `speed` (m/s), `course` (deg) and `fix` (NMEA status, e.g. `"A"`) are optional. The band logs GPS roughly every 30 s, so this array is short relative to `motion_samples`. Indoors there may be no fix — just send `[]` or omit.
 
 ### `floor_summary` (optional)
 
