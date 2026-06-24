@@ -228,4 +228,45 @@
       }
     });
   }
+
+  // ---- GPS map (gps_samples) — only shown when the session has GPS fixes ----
+  (function renderGps() {
+    const gps = (data.raw && Array.isArray(data.raw.gps_samples) ? data.raw.gps_samples : [])
+      .filter((g) => g && typeof g.lat === 'number' && typeof g.lon === 'number');
+    if (!gps.length) return;
+
+    const main = document.querySelector('main') || document.body;
+    const sec = document.createElement('div');
+    sec.innerHTML =
+      '<h2>GPS <span style="font-size:12px;color:#888;font-weight:400">(' + gps.length + ' fix' + (gps.length > 1 ? 'es' : '') + ')</span></h2>' +
+      '<div id="gpsMap" style="height:320px;border-radius:10px;overflow:hidden;border:1px solid var(--line)"></div>' +
+      '<p class="muted" style="font-size:12px;margin-top:4px">Outdoor GPS fixes (decimal degrees). Green = first, red = last. Indoors there may be none.</p>';
+    const accelH2 = [...document.querySelectorAll('h2')].find((h) => /Accelerometer/.test(h.textContent));
+    if (accelH2) main.insertBefore(sec, accelH2); else main.appendChild(sec);
+
+    function draw() {
+      const pts = gps.map((g) => [g.lat, g.lon]);
+      const map = L.map('gpsMap');
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
+      if (pts.length > 1) L.polyline(pts, { color: '#4f8cff', weight: 3 }).addTo(map);
+      pts.forEach((p, i) => {
+        const col = i === 0 ? '#10b981' : i === pts.length - 1 ? '#ef4444' : '#4f8cff';
+        L.circleMarker(p, { radius: 6, color: col, fillColor: col, fillOpacity: 0.9, weight: 2 })
+          .addTo(map)
+          .bindPopup('fix ' + (i + 1) + (gps[i].fix ? ' (' + gps[i].fix + ')' : '') + '<br>' + p[0].toFixed(6) + ', ' + p[1].toFixed(6));
+      });
+      if (pts.length > 1) map.fitBounds(pts, { padding: [30, 30] }); else map.setView(pts[0], 16);
+      setTimeout(() => map.invalidateSize(), 80); // tiles render correctly after layout settles
+    }
+
+    if (window.L) { draw(); return; }
+    const css = document.createElement('link');
+    css.rel = 'stylesheet';
+    css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    document.head.appendChild(css);
+    const js = document.createElement('script');
+    js.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    js.onload = draw;
+    document.head.appendChild(js);
+  })();
 })();
